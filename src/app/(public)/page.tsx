@@ -117,8 +117,8 @@ export default async function PublicHomePage({ searchParams }: Props) {
         {items.map((item) => {
           const isUnavailable = item.status === Status.Terjual || item.status === Status.Dipesan;
           
-          const CardWrapper = isUnavailable ? 'div' : Link;
-          const wrapperProps = isUnavailable ? {} : { href: `/katalog/${item.id}` };
+          const CardWrapper: any = isUnavailable ? 'div' : Link;
+          const wrapperProps: any = isUnavailable ? {} : { href: `/katalog/${item.id}` };
 
           return (
             <CardWrapper

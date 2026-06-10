@@ -26,7 +26,7 @@ export default async function AdminDashboard() {
 
   const categoryData = categoriesDb.map(c => ({
     name: c.category,
-    total: c._count._all
+    total: Number(c._count)
   }));
 
   return (

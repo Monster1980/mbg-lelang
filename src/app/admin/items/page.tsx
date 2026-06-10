@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { PlusCircle, ExternalLink, Printer } from "lucide-react";
+import { PlusCircle, ExternalLink, Printer, PackageSearch } from "lucide-react";
 
 export default async function AdminItemsPage() {
   const items = await prisma.auctionItem.findMany({
