@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────────
+
+enum Grade {
+  A
+  B
+  C
+}
+
+enum Status {
+  Tersedia
+  Dipesan
+  Terjual
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────────
+
+/// Represents a used item listed for sale in the pawnshop catalog.
+/// Items are viewable online but can only be purchased physically at the store.
+model AuctionItem {
+  id              Int      @id @default(autoincrement())
+  sku             String   @unique
+  branchName      String   @map("branch_name")
+  title           String
+  category        String
+  description     String   @db.Text
+  defects         String?  @db.Text
+  grade           Grade
+  price           Decimal  @db.Decimal(12, 2)
+  status          Status   @default(Tersedia)
+  images          String[] // Array of image URLs
+  whatsappNumber  String   @map("whatsapp_number")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relation to sales transactions
+  transactions SalesTransaction[]
+
+  @@map("auction_items")
+}
+
+/// Records completed sales transactions logged by cashiers at the physical store.
+model SalesTransaction {
+  id              Int      @id @default(autoincrement())
+  itemId          Int      @map("item_id")
+  sku             String
+  soldPrice       Decimal  @db.Decimal(12, 2) @map("sold_price")
+  branchName      String   @map("branch_name")
+  cashierName     String   @map("cashier_name")
+  transactionDate DateTime @default(now()) @map("transaction_date")
+
+  // Relation to the auction item
+  item AuctionItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@map("sales_transactions")
+}
