@@ -56,8 +56,8 @@ export default function ImageSlider({ images, isUnavailable, status }: Props) {
       </div>
 
       {isUnavailable && (
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 pointer-events-none backdrop-blur-[2px]">
-          <span className="px-6 py-3 border-4 border-red-500 text-red-500 font-black text-3xl sm:text-4xl tracking-widest rounded-xl transform -rotate-12 bg-black/50 shadow-2xl">
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10 pointer-events-none backdrop-blur-[1px]">
+          <span className="px-6 py-3 border-4 border-red-600 text-red-600 font-black text-3xl sm:text-4xl tracking-widest rounded-xl transform -rotate-12 bg-red-50/80 shadow-xl">
             {status.toUpperCase()}
           </span>
         </div>
