@@ -40,9 +40,12 @@ export default async function SalesReportPage({
 
   const branchList = branches.map(b => b.branchName);
 
+  // Serialize objects to avoid Client Component errors with Decimal and Date
+  const serializedTransactions = JSON.parse(JSON.stringify(transactions));
+
   return (
     <ReportClient 
-      initialTransactions={transactions} 
+      initialTransactions={serializedTransactions} 
       branchList={branchList} 
       currentBranch={branchFilter || ""}
       currentStart={startDate || ""}

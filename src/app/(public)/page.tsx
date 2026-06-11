@@ -7,11 +7,9 @@ type Props = {
 
 export default async function PublicHomePage({ searchParams }: Props) {
   const resolvedParams = await searchParams;
-  const categoryFilter = resolvedParams.category as string | undefined;
   const branchFilter = resolvedParams.branch as string | undefined;
 
   const where = {
-    ...(categoryFilter ? { category: categoryFilter } : {}),
     branchName: {
       contains: "Pasuruan",
       mode: "insensitive" as const,
@@ -37,6 +35,20 @@ export default async function PublicHomePage({ searchParams }: Props) {
     by: ["branchName"],
   });
 
+  // Serialize objects to prevent "Only plain objects can be passed to Client Components" error
+  const serializedItems = JSON.parse(JSON.stringify(items));
+  // Count could be BigInt depending on Prisma config, which JSON.stringify doesn't handle natively.
+  // We can manually map them or just use stringify if it works (Prisma Decimal and BigInt).
+  // Next.js client components accept strings/numbers for counts. Let's map categories and branches.
+  const serializedCategories = categories.map(c => ({
+    ...c,
+    _count: Number(c._count)
+  }));
+  const serializedBranches = branches.map(b => ({
+    ...b,
+    _count: b._count ? Number(b._count) : undefined
+  }));
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full pb-20">
       <div className="mb-6">
@@ -50,10 +62,9 @@ export default async function PublicHomePage({ searchParams }: Props) {
 
       {/* Catalog View (Client Component) */}
       <CatalogView 
-        items={items}
-        categories={categories}
-        branches={branches}
-        categoryFilter={categoryFilter}
+        items={serializedItems}
+        categories={serializedCategories}
+        branches={serializedBranches}
         branchFilter={branchFilter}
       />
     </div>

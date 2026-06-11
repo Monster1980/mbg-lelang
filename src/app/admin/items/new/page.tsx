@@ -15,7 +15,7 @@ export default function AddItemPage() {
 
   const [formData, setFormData] = useState({
     title: "",
-    branchName: "MBG Cabang Jakarta Pusat",
+    branchName: "MBG Cabang Pasuruan",
     category: "Elektronik",
     price: "",
     grade: "A",
@@ -94,8 +94,8 @@ export default function AddItemPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <div>
-        <h1 className="text-3xl font-bold text-text-primary">Tambah Barang Baru</h1>
-        <p className="text-text-secondary mt-1">Masukkan detail barang lelang atau preloved ke dalam katalog.</p>
+        <h1 className="text-3xl font-bold text-slate-900">Tambah Barang Baru</h1>
+        <p className="text-slate-500 mt-1">Masukkan detail barang lelang atau preloved ke dalam katalog.</p>
       </div>
 
       <div className="glass rounded-3xl p-8 border border-white/10 shadow-xl">
@@ -141,15 +141,12 @@ export default function AddItemPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Pilih Cabang</label>
-                <select value={formData.branchName} onChange={e => setFormData({...formData, branchName: e.target.value})} className="w-full bg-surface-elevated border border-white/10 rounded-xl px-4 py-2.5 text-text-primary focus:outline-none focus:border-brand-500 transition-all">
-                  <option>MBG Cabang Jakarta Pusat</option>
-                  <option>MBG Cabang Bandung</option>
-                  <option>MBG Cabang Surabaya</option>
-                  <option>MBG Cabang Semarang</option>
-                  <option>MBG Cabang Medan</option>
-                </select>
-                <p className="text-xs text-text-muted mt-1">SKU akan digenerate otomatis berdasarkan cabang.</p>
+                <label className="block text-sm font-medium text-text-primary mb-1">Lokasi Cabang</label>
+                <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-500 font-medium flex items-center gap-2 cursor-not-allowed">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  MBG Cabang Pasuruan (Terkunci)
+                </div>
+                <p className="text-xs text-slate-500 mt-1">SKU akan digenerate otomatis berdasarkan cabang Pasuruan.</p>
               </div>
             </div>
 

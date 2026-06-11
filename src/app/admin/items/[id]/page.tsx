@@ -21,7 +21,11 @@ export default async function AdminItemDetailPage({ params }: Props) {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(val));
   }
 
+  // Serialize Prisma object to plain JS object to avoid Client Component errors
+  // Converts Decimal to string, Date to ISO string
+  const serializedItem = JSON.parse(JSON.stringify(item));
+
   return (
-    <AdminItemDetailClient item={item} formattedPrice={formatIDR(item.price)} />
+    <AdminItemDetailClient item={serializedItem} formattedPrice={formatIDR(item.price)} />
   );
 }

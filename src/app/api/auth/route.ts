@@ -4,13 +4,13 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { password } = body;
 
-  // Simple hardcoded password for development phase
-  if (password === "admin123") {
+  // Secure password check using environment variable
+  if (password === process.env.ADMIN_PASSWORD) {
     const response = NextResponse.json({ success: true });
-    response.cookies.set("admin_session", "authenticated", {
+    response.cookies.set("mbg_session", "authenticated", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "strict",
       maxAge: 60 * 60 * 24, // 1 day
       path: "/",
     });
@@ -22,6 +22,6 @@ export async function POST(request: Request) {
 
 export async function DELETE() {
   const response = NextResponse.json({ success: true });
-  response.cookies.delete("admin_session");
+  response.cookies.delete("mbg_session");
   return response;
 }

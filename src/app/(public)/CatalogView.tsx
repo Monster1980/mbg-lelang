@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,7 +11,6 @@ type CatalogViewProps = {
   items: AuctionItem[];
   categories: { category: string }[];
   branches: { branchName: string }[];
-  categoryFilter?: string;
   branchFilter?: string;
 };
 
@@ -19,18 +18,18 @@ export default function CatalogView({
   items,
   categories,
   branches,
-  categoryFilter,
   branchFilter,
 }: CatalogViewProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [activeCategory, setActiveCategory] = useState("Semua Kategori");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // Initialize search query from URL on load
+    // Initialize search and category queries from URL on load
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       setSearchQuery(params.get("q") || "");
+      setActiveCategory(params.get("category") || "Semua Kategori");
 
       const handleSearch = (e: Event) => {
         const customEvent = e as CustomEvent<string>;
@@ -43,28 +42,38 @@ export default function CatalogView({
   }, []);
 
   // Filter items in memory for instant responsiveness
-  const filteredItems = items.filter((item) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      item.title.toLowerCase().includes(query) ||
-      item.sku.toLowerCase().includes(query)
-    );
-  });
+  const displayedItems = useMemo(() => {
+    let filtered = items;
 
-  const handleFilterClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    newParams: Record<string, string>
-  ) => {
-    e.preventDefault();
-    const searchParams = new URLSearchParams();
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value) searchParams.set(key, value);
-    });
-    
-    startTransition(() => {
-      router.push(`/?${searchParams.toString()}`);
-    });
+    // Category Filter
+    if (activeCategory !== "Semua Kategori") {
+      filtered = filtered.filter((item) => item.category === activeCategory);
+    }
+
+    // Search Filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.title.toLowerCase().includes(query) ||
+          item.sku.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [items, activeCategory, searchQuery]);
+
+  const handleCategoryClick = (category: string) => {
+    setActiveCategory(category);
+    // Optional: Update URL for sharing without triggering server fetch
+    const params = new URLSearchParams(window.location.search);
+    if (category === "Semua Kategori") {
+      params.delete("category");
+    } else {
+      params.set("category", category);
+    }
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
   };
 
   const formatIDR = (val: any) => {
@@ -83,30 +92,28 @@ export default function CatalogView({
         <div>
           <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Kategori</h3>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-            <Link
-              href={`/?${new URLSearchParams({ ...(branchFilter ? { branch: branchFilter } : {}) }).toString()}`}
-              onClick={(e) => handleFilterClick(e, { ...(branchFilter ? { branch: branchFilter } : {}) })}
+            <button
+              onClick={() => handleCategoryClick("Semua Kategori")}
               className={`px-4 py-1.5 rounded-full whitespace-nowrap text-xs font-bold transition-all flex-shrink-0 ${
-                !categoryFilter
+                activeCategory === "Semua Kategori"
                   ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
                   : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
               Semua Kategori
-            </Link>
+            </button>
             {categories.map((c) => (
-              <Link
+              <button
                 key={c.category}
-                href={`/?${new URLSearchParams({ category: c.category, ...(branchFilter ? { branch: branchFilter } : {}) }).toString()}`}
-                onClick={(e) => handleFilterClick(e, { category: c.category, ...(branchFilter ? { branch: branchFilter } : {}) })}
+                onClick={() => handleCategoryClick(c.category)}
                 className={`px-4 py-1.5 rounded-full whitespace-nowrap text-xs font-bold transition-all flex-shrink-0 ${
-                  categoryFilter === c.category
+                  activeCategory === c.category
                     ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
                     : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
                 }`}
               >
                 {c.category}
-              </Link>
+              </button>
             ))}
           </div>
         </div>
@@ -125,14 +132,9 @@ export default function CatalogView({
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        {isPending ? (
-          /* Skeleton Loading State */
-          Array.from({ length: 6 }).map((_, i) => (
-            <ProductSkeleton key={i} />
-          ))
-        ) : filteredItems.length > 0 ? (
+        {displayedItems.length > 0 ? (
           /* Actual Items */
-          filteredItems.map((item) => {
+          displayedItems.map((item) => {
             const isUnavailable = item.status === Status.Terjual || item.status === Status.Dipesan;
             
             const CardWrapper: any = isUnavailable ? 'div' : Link;
