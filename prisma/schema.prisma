@@ -42,6 +42,7 @@ model AuctionItem {
   status          Status   @default(Tersedia)
   images          String[] // Array of image URLs
   whatsappNumber  String   @map("whatsapp_number")
+  youtubeUrl      String?  @map("youtube_url")
   createdAt       DateTime @default(now()) @map("created_at")
 
   // Relation to sales transactions
