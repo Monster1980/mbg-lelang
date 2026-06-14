@@ -29,39 +29,112 @@ function AdminDashboardSkeleton() {
 }
 
 async function DashboardData() {
-  // Query Total Active Items
+  const today = new Date();
+  
+  // Start date: 1st of current month
+  const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  startDate.setHours(0, 0, 0, 0);
+
+  // End date: end of today
+  const endDate = new Date(today);
+  endDate.setHours(23, 59, 59, 999);
+
+  // Active items
   const totalActive = await prisma.auctionItem.count({
     where: { status: "Tersedia" }
   });
 
-  // Query Sold Today and Revenue Today
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-
-  const soldTodayItems = await prisma.salesTransaction.findMany({
-    where: { transactionDate: { gte: startOfDay } }
+  // Sales in range
+  const sales = await prisma.salesTransaction.findMany({
+    where: {
+      transactionDate: {
+        gte: startDate,
+        lte: endDate
+      }
+    },
+    include: {
+      item: {
+        select: {
+          title: true,
+          category: true
+        }
+      }
+    },
+    orderBy: {
+      transactionDate: "desc"
+    }
   });
 
-  const totalSoldToday = soldTodayItems.length;
-  const revenueToday = soldTodayItems.reduce((acc, item) => acc + Number(item.soldPrice), 0);
+  const totalSold = sales.length;
+  const totalRevenue = sales.reduce((sum, tx) => sum + Number(tx.soldPrice), 0);
 
-  // Group by categories for the chart
-  const categoriesDb = await prisma.auctionItem.groupBy({
-    by: ['category'],
-    _count: true,
+  // Daily trend
+  const dailyMap: { [key: string]: { date: string; formattedDate: string; revenue: number; count: number } } = {};
+  const tempDate = new Date(startDate);
+  while (tempDate <= endDate) {
+    const key = tempDate.toISOString().split("T")[0];
+    const formattedDate = tempDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+    dailyMap[key] = { date: key, formattedDate, revenue: 0, count: 0 };
+    tempDate.setDate(tempDate.getDate() + 1);
+  }
+
+  sales.forEach(tx => {
+    const key = new Date(tx.transactionDate).toISOString().split("T")[0];
+    if (dailyMap[key]) {
+      dailyMap[key].revenue += Number(tx.soldPrice);
+      dailyMap[key].count += 1;
+    }
   });
+  const dailySalesData = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
 
-  const categoryData = categoriesDb.map(c => ({
-    name: c.category,
-    total: Number(c._count)
+  // Category Pie Chart
+  const categoriesMap: { [key: string]: number } = {};
+  sales.forEach(tx => {
+    const cat = tx.item?.category || "Lainnya";
+    categoriesMap[cat] = (categoriesMap[cat] || 0) + 1;
+  });
+  const categoryData = Object.keys(categoriesMap).map(name => ({
+    name,
+    total: categoriesMap[name]
   }));
+
+  // Cashier Bar Chart
+  const cashierMap: { [key: string]: number } = {};
+  sales.forEach(tx => {
+    const cashier = tx.cashierName || "Kasir Utama";
+    cashierMap[cashier] = (cashierMap[cashier] || 0) + Number(tx.soldPrice);
+  });
+  const cashierData = Object.keys(cashierMap).map(name => ({
+    name,
+    revenue: cashierMap[name]
+  }));
+
+  // Recent transactions
+  const recentTransactions = sales.slice(0, 15).map(tx => ({
+    id: tx.id,
+    sku: tx.sku,
+    itemTitle: tx.item?.title || "Item Terhapus",
+    transactionDate: tx.transactionDate.toISOString(),
+    cashierName: tx.cashierName,
+    branchName: tx.branchName,
+    soldPrice: Number(tx.soldPrice)
+  }));
+
+  const initialData = {
+    totalActive,
+    totalSold,
+    totalRevenue,
+    dailySalesData,
+    categoryData,
+    cashierData,
+    recentTransactions
+  };
 
   return (
     <AdminDashboardClient 
-      totalActive={totalActive} 
-      totalSoldToday={totalSoldToday}
-      revenueToday={revenueToday}
-      categoryData={categoryData}
+      initialData={initialData}
+      initialStartDate={startDate.toISOString()}
+      initialEndDate={endDate.toISOString()}
     />
   );
 }

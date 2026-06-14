@@ -50,7 +50,7 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm bg-surface-elevated p-4 rounded-xl mb-6 border border-white/5">
-              <div><span className="text-text-muted block mb-1">Grade Kondisi</span><span className="font-bold text-text-primary">{item.grade}</span></div>
+              <div><span className="text-text-muted block mb-1">Status Kondisi</span><span className="font-bold text-text-primary">{item.kondisi === 'Baru' ? '✨ Baru' : '♻️ Bekas'}</span></div>
               <div><span className="text-text-muted block mb-1">WhatsApp CS</span><span className="font-medium text-text-primary">{item.whatsappNumber}</span></div>
             </div>
 
@@ -99,7 +99,7 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
             
             <div className="flex justify-between w-full px-4 text-xs font-bold mb-2">
               <span>{item.category}</span>
-              <span>Grade {item.grade}</span>
+              <span>{item.kondisi}</span>
             </div>
             
             <div className="my-2 bg-white px-2">

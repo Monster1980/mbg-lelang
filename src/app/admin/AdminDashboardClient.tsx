@@ -1,28 +1,143 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
-import { Package, TrendingUp, DollarSign } from 'lucide-react';
+import { useState, useEffect } from "react";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Legend
+} from "recharts";
+import { Package, TrendingUp, DollarSign, Loader2, Calendar } from "lucide-react";
+import DateRangePicker, { DateRange } from "@/components/DateRangePicker";
 
-type Props = {
+type AnalyticsData = {
   totalActive: number;
-  totalSoldToday: number;
-  revenueToday: number;
+  totalSold: number;
+  totalRevenue: number;
+  dailySalesData: { date: string; formattedDate: string; revenue: number; count: number }[];
   categoryData: { name: string; total: number }[];
+  cashierData: { name: string; revenue: number }[];
+  recentTransactions: {
+    id: number;
+    sku: string;
+    itemTitle: string;
+    transactionDate: string;
+    cashierName: string;
+    branchName: string;
+    soldPrice: number;
+  }[];
 };
 
-export default function AdminDashboardClient({ totalActive, totalSoldToday, revenueToday, categoryData }: Props) {
+type Props = {
+  initialData: AnalyticsData;
+  initialStartDate: string;
+  initialEndDate: string;
+};
+
+const PIE_COLORS = ["#2563eb", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#3b82f6", "#06b6d4"];
+
+export default function AdminDashboardClient({ initialData, initialStartDate, initialEndDate }: Props) {
+  const [data, setData] = useState<AnalyticsData>(initialData);
+  const [loading, setLoading] = useState(false);
+
+  // Initialize date range from props
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: new Date(initialStartDate),
+    to: new Date(initialEndDate),
+  });
+
   const formatIDR = (val: number) => {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val);
-  }
+  };
+
+  const formatDateString = (isoString: string) => {
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return isoString;
+    }
+  };
+
+  useEffect(() => {
+    if (!dateRange.from || !dateRange.to) return;
+
+    // Avoid double fetching initial data on mount
+    const startIso = dateRange.from.toISOString().split("T")[0];
+    const endIso = dateRange.to.toISOString().split("T")[0];
+    const initStartIso = initialStartDate.split("T")[0];
+    const initEndIso = initialEndDate.split("T")[0];
+
+    if (startIso === initStartIso && endIso === initEndIso && data === initialData) {
+      return;
+    }
+
+    let active = true;
+
+    async function fetchAnalytics() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/admin/analytics?startDate=${startIso}&endDate=${endIso}`);
+        const result = await res.json();
+        if (active && result.success) {
+          setData(result.data);
+        }
+      } catch (err) {
+        console.error("Gagal memuat analitik dashboard:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    fetchAnalytics();
+
+    return () => {
+      active = false;
+    };
+  }, [dateRange]);
 
   const statCards = [
-    { title: "Item Aktif Tersedia", value: totalActive, icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
-    { title: "Terjual Hari Ini", value: totalSoldToday, icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
-    { title: "Pendapatan Hari Ini", value: formatIDR(revenueToday), icon: DollarSign, color: "text-amber-600", bg: "bg-amber-50" },
+    { title: "Item Aktif Tersedia", value: data.totalActive, icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
+    { title: "Item Terjual (Periode)", value: data.totalSold, icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
+    { title: "Total Pendapatan (Periode)", value: formatIDR(data.totalRevenue), icon: DollarSign, color: "text-amber-600", bg: "bg-amber-50" },
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 pb-12 relative">
+      {/* Date Range Picker Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
+          <Calendar className="w-5 h-5 text-slate-400" />
+          Pilih Filter Rentang Waktu:
+        </div>
+        <DateRangePicker value={dateRange} onChange={setDateRange} />
+      </div>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-20 flex items-center justify-center rounded-2xl">
+          <div className="flex flex-col items-center gap-3 bg-white p-5 rounded-2xl shadow-lg border border-slate-100">
+            <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
+            <p className="text-sm font-semibold text-slate-600">Memperbarui data analitik...</p>
+          </div>
+        </div>
+      )}
+
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {statCards.map((stat, i) => (
@@ -38,34 +153,177 @@ export default function AdminDashboardClient({ totalActive, totalSoldToday, reve
         ))}
       </div>
 
-      {/* Chart */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900 mb-6">Distribusi Kategori Barang</h3>
-        <div className="h-80 w-full">
-          {categoryData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                <Tooltip 
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-                  itemStyle={{ color: '#0f172a', fontWeight: 'bold' }}
-                />
-                <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={60}>
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#2563eb' : '#3b82f6'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-500">
-              Belum ada data kategori
-            </div>
-          )}
+      {/* Main Product Sales Chart Block */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Grafik Perkembangan Penjualan & Pendapatan</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Tren harian nilai transaksi di seluruh cabang.</p>
+          </div>
         </div>
+
+        <div className="p-6">
+          <div className="h-80 w-full">
+            {data.dailySalesData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data.dailySalesData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0.01} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis dataKey="formattedDate" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis
+                    stroke="#64748b"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `Rp ${val / 1000}k`}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}
+                    formatter={(value: any, name: any) => {
+                      if (name === "revenue") return [formatIDR(value), "Pendapatan"];
+                      if (name === "count") return [value, "Jumlah Transaksi"];
+                      return [value, name];
+                    }}
+                  />
+                  <Area type="monotone" dataKey="revenue" name="revenue" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+                Tidak ada data tren penjualan pada periode ini.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Live Transactions List Table directly below Graph */}
+        <div className="border-t border-slate-100 bg-slate-50/50">
+          <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white">
+            <h4 className="text-sm font-bold text-slate-800">List Transaksi Terbaru (Periode Terpilih)</h4>
+            <span className="text-xs text-slate-500 font-medium">Menampilkan maks. 15 transaksi</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs whitespace-nowrap">
+              <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider">
+                <tr>
+                  <th className="px-6 py-3.5">ID Transaksi</th>
+                  <th className="px-6 py-3.5">Tanggal/Waktu</th>
+                  <th className="px-6 py-3.5">Kasir</th>
+                  <th className="px-6 py-3.5">Cabang</th>
+                  <th className="px-6 py-3.5">Detail Barang</th>
+                  <th className="px-6 py-3.5 text-right">Total Pendapatan</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {data.recentTransactions.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-6 py-4 font-mono font-bold text-slate-800">TX-{String(tx.id).padStart(5, "0")}</td>
+                    <td className="px-6 py-4 text-slate-600">{formatDateString(tx.transactionDate)}</td>
+                    <td className="px-6 py-4 text-slate-700 font-medium">{tx.cashierName}</td>
+                    <td className="px-6 py-4 text-slate-600">{tx.branchName}</td>
+                    <td className="px-6 py-4 text-slate-700 max-w-[200px] truncate">
+                      <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-600 mr-1.5">{tx.sku}</span>
+                      {tx.itemTitle}
+                    </td>
+                    <td className="px-6 py-4 text-right font-bold text-slate-900">{formatIDR(tx.soldPrice)}</td>
+                  </tr>
+                ))}
+                {data.recentTransactions.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
+                      Belum ada transaksi terekam dalam rentang tanggal ini.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Visual Sub-Charts Grid (Two Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Pie Chart: Category Sales Distribution */}
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Distribusi Kategori Penjualan</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Proporsi item terjual berdasarkan kategori produk.</p>
+          </div>
+          <div className="h-64 w-full my-6 flex items-center justify-center">
+            {data.categoryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={3}
+                    dataKey="total"
+                  >
+                    {data.categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+                    formatter={(value) => [`${value} item`, "Jumlah"]}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" fontSize={11} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-slate-400 text-sm">Tidak ada data distribusi kategori.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Bar Chart: Cashier Revenue Performance */}
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Performa Pendapatan per Kasir</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Total omzet penjualan yang dicatat oleh masing-masing kasir.</p>
+          </div>
+          <div className="h-64 w-full my-6">
+            {data.cashierData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.cashierData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis
+                    stroke="#64748b"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `Rp ${val / 1000000}jt`}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+                    formatter={(value: any) => [formatIDR(value), "Omzet"]}
+                  />
+                  <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                    {data.cashierData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[(index + 2) % PIE_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+                Tidak ada data performa kasir.
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );

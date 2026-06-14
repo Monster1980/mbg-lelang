@@ -1,4 +1,4 @@
-import { PrismaClient, Grade, Status } from "@prisma/client";
+import { PrismaClient, Kondisi, Status } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -13,14 +13,14 @@ async function main() {
   const items = await Promise.all([
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-ELC-001",
+        sku: "1001",
         branchName: "MBG Cabang Pasuruan",
         title: "iPhone 13 Pro Max 256GB - Graphite",
         category: "Elektronik",
         description:
           "iPhone 13 Pro Max dalam kondisi sangat baik. Baterai health 89%. Layar mulus tanpa goresan. Lengkap dengan charger original.",
         defects: "Sedikit lecet di bagian frame kanan bawah",
-        grade: Grade.A,
+        kondisi: Kondisi.Baru,
         price: 8500000,
         status: Status.Tersedia,
         images: [
@@ -32,14 +32,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-ELC-002",
+        sku: "1002",
         branchName: "MBG Cabang Pasuruan",
         title: "Samsung Galaxy S22 Ultra 128GB - Phantom Black",
         category: "Elektronik",
         description:
           "Samsung Galaxy S22 Ultra dengan S-Pen. Layar Dynamic AMOLED 2X masih excellent. Semua fitur berjalan normal.",
         defects: null,
-        grade: Grade.A,
+        kondisi: Kondisi.Baru,
         price: 7200000,
         status: Status.Tersedia,
         images: [
@@ -50,14 +50,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-FAS-001",
+        sku: "2001",
         branchName: "MBG Cabang Pasuruan",
         title: "Tas Louis Vuitton Neverfull MM - Monogram",
         category: "Fashion",
         description:
           "Tas LV Neverfull MM authentic. Datecode jelas. Leather patina merata menandakan kualitas kulit asli. Termasuk pouch.",
         defects: "Minor patina pada handle, wajar untuk barang preloved",
-        grade: Grade.B,
+        kondisi: Kondisi.Bekas,
         price: 15000000,
         status: Status.Tersedia,
         images: [
@@ -68,14 +68,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-ELC-003",
+        sku: "1003",
         branchName: "MBG Cabang Pasuruan",
         title: 'MacBook Air M1 13" 2020 - Space Gray 256GB',
         category: "Elektronik",
         description:
           "MacBook Air M1 chip. Battery cycle count 152. Keyboard dan trackpad berfungsi sempurna. macOS terbaru terinstall.",
         defects: "Satu titik terang (bright spot) kecil di pojok kiri bawah layar, hampir tidak terlihat saat penggunaan normal",
-        grade: Grade.B,
+        kondisi: Kondisi.Bekas,
         price: 7800000,
         status: Status.Dipesan,
         images: [
@@ -86,14 +86,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-JWL-001",
+        sku: "3001",
         branchName: "MBG Cabang Pasuruan",
         title: "Cincin Emas 750 (18K) - Berlian 0.5 Carat",
         category: "Perhiasan",
         description:
           "Cincin emas kuning 18 karat dengan berlian solitaire 0.5 carat. Sertifikat keaslian tersedia. Ukuran ring 15.",
         defects: null,
-        grade: Grade.A,
+        kondisi: Kondisi.Baru,
         price: 12500000,
         status: Status.Tersedia,
         images: [
@@ -104,14 +104,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-ELC-004",
+        sku: "1004",
         branchName: "MBG Cabang Pasuruan",
         title: "PlayStation 5 Digital Edition + 2 Controller",
         category: "Elektronik",
         description:
           "PS5 Digital Edition lengkap dengan 2 DualSense controller. Firmware terbaru. Termasuk kabel HDMI dan power cable original.",
         defects: "Goresan halus di bagian body atas, tidak mempengaruhi performa",
-        grade: Grade.B,
+        kondisi: Kondisi.Bekas,
         price: 4500000,
         status: Status.Tersedia,
         images: [
@@ -122,14 +122,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-WTC-001",
+        sku: "4001",
         branchName: "MBG Cabang Pasuruan",
         title: "Rolex Datejust 36mm - Silver Dial Jubilee",
         category: "Jam Tangan",
         description:
           "Rolex Datejust ref. 126234 dengan dial silver dan bracelet Jubilee. Service terakhir 2024. Bergaransi toko 6 bulan.",
         defects: null,
-        grade: Grade.A,
+        kondisi: Kondisi.Baru,
         price: 95000000,
         status: Status.Tersedia,
         images: [
@@ -140,14 +140,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-ELC-005",
+        sku: "1005",
         branchName: "MBG Cabang Pasuruan",
         title: "Canon EOS R6 Mark II Body Only",
         category: "Elektronik",
         description:
           "Canon EOS R6 II mirrorless. Shutter count 12.500. Sensor bersih. Semua tombol dan dial berfungsi normal. Termasuk baterai original dan charger.",
         defects: "Rubber grip sedikit mengembang di bagian kanan, masih nyaman digenggam",
-        grade: Grade.B,
+        kondisi: Kondisi.Bekas,
         price: 28000000,
         status: Status.Terjual,
         images: [
@@ -158,14 +158,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-OTO-001",
+        sku: "5001",
         branchName: "MBG Cabang Pasuruan",
         title: "Motor Honda Vario 150 - Tahun 2021",
         category: "Otomotif",
         description:
           "Honda Vario 150 warna hitam doff. Kondisi mesin halus, pajak hidup sampai bulan 10 tahun depan. Surat-surat lengkap (BPKB, STNK).",
         defects: "Baret pemakaian wajar di bodi sebelah kiri",
-        grade: Grade.A,
+        kondisi: Kondisi.Baru,
         price: 18500000,
         status: Status.Tersedia,
         images: [
@@ -176,14 +176,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-FRN-001",
+        sku: "6001",
         branchName: "MBG Cabang Pasuruan",
         title: "Sofa Minimalis 3 Dudukan - Kulit Sintetis",
         category: "Furniture",
         description:
           "Sofa minimalis ukuran panjang 2 meter. Material kulit sintetis premium warna cokelat tua. Busa masih sangat empuk dan tidak kempes.",
         defects: null,
-        grade: Grade.B,
+        kondisi: Kondisi.Bekas,
         price: 1200000,
         status: Status.Tersedia,
         images: [
@@ -194,14 +194,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-MSC-001",
+        sku: "7001",
         branchName: "MBG Cabang Pasuruan",
         title: "Gitar Akustik Yamaha F310",
         category: "Alat Musik",
         description:
           "Gitar akustik legendaris Yamaha F310. Senar baru diganti dengan D'Addario. Suara nyaring dan neck lurus. Cocok untuk pemula maupun profesional.",
         defects: "Sedikit ding (penyok kecil) di bagian belakang bodi",
-        grade: Grade.B,
+        kondisi: Kondisi.Bekas,
         price: 850000,
         status: Status.Tersedia,
         images: [
@@ -212,14 +212,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-KLK-001",
+        sku: "8001",
         branchName: "MBG Cabang Pasuruan",
         title: "Kamera Analog Nikon FM2 + Lensa 50mm f/1.4",
         category: "Koleksi",
         description:
           "Kamera analog legendaris Nikon FM2. Mekanis 100% normal, lightmeter nyala akurat. Lensa bersih bebas jamur. Termasuk strap kulit original.",
         defects: "Lecet brassing di bagian ujung atas prisma (wajar karena usia)",
-        grade: Grade.A,
+        kondisi: Kondisi.Baru,
         price: 4500000,
         status: Status.Tersedia,
         images: [
@@ -230,14 +230,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-ELC-006",
+        sku: "1006",
         branchName: "MBG Cabang Pasuruan",
         title: "Smart TV LG 55 Inch 4K UHD",
         category: "Elektronik",
         description:
           "Smart TV LG resolusi 4K UHD. Mendukung Netflix, YouTube, dan Disney+. Kondisi panel sempurna tanpa dead pixel. Remote magic masih berfungsi normal.",
         defects: null,
-        grade: Grade.A,
+        kondisi: Kondisi.Baru,
         price: 4800000,
         status: Status.Tersedia,
         images: [
@@ -248,14 +248,14 @@ async function main() {
     }),
     prisma.auctionItem.create({
       data: {
-        sku: "MBG-OTO-002",
+        sku: "5002",
         branchName: "MBG Cabang Pasuruan",
         title: "Helm Shoei X-14 Marquez Motegi 3 - Size L",
         category: "Otomotif",
         description:
           "Helm full face premium Shoei X-14 seri Marquez. Busa dalam tebal dan wangi. Visor clear mulus. Lengkap dengan sarung helm original.",
         defects: "Tidak ada kardus bawaan",
-        grade: Grade.A,
+        kondisi: Kondisi.Baru,
         price: 7500000,
         status: Status.Tersedia,
         images: [

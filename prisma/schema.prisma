@@ -13,10 +13,9 @@ datasource db {
 
 // ─── Enums ──────────────────────────────────────────────────────────────────────
 
-enum Grade {
-  A
-  B
-  C
+enum Kondisi {
+  Baru
+  Bekas
 }
 
 enum Status {
@@ -25,7 +24,25 @@ enum Status {
   Terjual
 }
 
+enum Role {
+  SUPERADMIN
+  ADMIN
+}
+
 // ─── Models ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  nama_lengkap String   @map("nama_lengkap")
+  asal_cabang  String   @map("asal_cabang")
+  role         Role     @default(ADMIN)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
 
 /// Represents a used item listed for sale in the pawnshop catalog.
 /// Items are viewable online but can only be purchased physically at the store.
@@ -37,7 +54,7 @@ model AuctionItem {
   category        String
   description     String   @db.Text
   defects         String?  @db.Text
-  grade           Grade
+  kondisi         Kondisi
   price           Decimal  @db.Decimal(12, 2)
   status          Status   @default(Tersedia)
   images          String[] // Array of image URLs

@@ -24,7 +24,7 @@ export default function AddItemPage() {
     branchName: "MBG Cabang Pasuruan",
     category: "Elektronik",
     price: "",
-    grade: "A",
+    kondisi: "Baru",
     whatsappNumber: "6281234567890",
     description: "",
     defects: "",
@@ -173,17 +173,19 @@ export default function AddItemPage() {
             {/* ROW 1 */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                Input SKU / ID Barang Manis <span className="text-red-500">*</span>
+                Input SKU / ID Barang <span className="text-red-500">*</span>
               </label>
               <input
                 required
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={formData.sku}
-                onChange={(e) => setFormData({ ...formData, sku: e.target.value.toUpperCase() })}
+                onChange={(e) => setFormData({ ...formData, sku: e.target.value.replace(/\D/g, "") })}
                 className={inputClassName}
-                placeholder="Contoh: MBG-PSR-001"
+                placeholder="Contoh: 001234"
               />
-              <p className="text-xs text-slate-400 mt-1">Harus unik. Gunakan format yang mudah diingat.</p>
+              <p className="text-xs text-slate-400 mt-1">Harus unik. Hanya angka yang diperbolehkan.</p>
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -215,16 +217,31 @@ export default function AddItemPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Grade Kondisi</label>
-              <select
-                value={formData.grade}
-                onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                className={inputClassName}
-              >
-                <option value="A">Grade A (Mulus)</option>
-                <option value="B">Grade B (Minus Dikit)</option>
-                <option value="C">Grade C (Minus Banyak)</option>
-              </select>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Status Kondisi Barang</label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, kondisi: "Baru" })}
+                  className={`flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
+                    formData.kondisi === "Baru"
+                      ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-500/20"
+                      : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
+                  }`}
+                >
+                  ✨ Baru
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, kondisi: "Bekas" })}
+                  className={`flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
+                    formData.kondisi === "Bekas"
+                      ? "border-slate-700 bg-slate-100 text-slate-800 ring-2 ring-slate-500/20"
+                      : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
+                  }`}
+                >
+                  ♻️ Bekas
+                </button>
+              </div>
             </div>
 
             {/* ROW 3 */}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ export default function AdminLogin() {
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (res.ok) {
@@ -45,9 +46,20 @@ export default function AdminLogin() {
           <p className="text-slate-500 text-sm">Sistem Manajemen Katalog</p>
         </div>
 
-        <form onSubmit={handleLogin} className="relative z-10 space-y-6">
+        <form onSubmit={handleLogin} className="relative z-10 space-y-5">
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Password Admin</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@mbg.com"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-400 font-medium"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Password</label>
             <input
               type="password"
               value={password}
@@ -56,13 +68,14 @@ export default function AdminLogin() {
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-400 font-medium"
               required
             />
-            {error && <p className="mt-2 text-sm text-red-500 font-bold">{error}</p>}
           </div>
+          
+          {error && <p className="text-sm text-red-500 font-bold text-center">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-xl bg-brand-600 text-white font-bold hover:bg-brand-700 hover:shadow-lg hover:shadow-brand-500/20 transition-all disabled:opacity-70 flex justify-center items-center"
+            className="w-full py-3 px-4 rounded-xl bg-brand-600 text-white font-bold hover:bg-brand-700 hover:shadow-lg hover:shadow-brand-500/20 transition-all disabled:opacity-70 flex justify-center items-center mt-2"
           >
             {loading ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

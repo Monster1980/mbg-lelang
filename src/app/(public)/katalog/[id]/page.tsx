@@ -65,11 +65,10 @@ export default async function DetailPage({ params }: Props) {
             <div className="mb-5">
               <div className="flex items-center gap-2 mb-3">
                 <span className={`px-2 py-1 text-[10px] uppercase font-black tracking-widest rounded border ${
-                    item.grade === "A" ? "border-green-500/50 text-green-400 bg-green-500/10" :
-                    item.grade === "B" ? "border-yellow-500/50 text-yellow-400 bg-yellow-500/10" :
-                    "border-red-500/50 text-red-400 bg-red-500/10"
+                    item.kondisi === "Baru" ? "border-green-500/50 text-green-500 bg-green-500/10" :
+                    "border-slate-500/50 text-slate-400 bg-slate-500/10"
                 }`}>
-                  Grade {item.grade}
+                  {item.kondisi}
                 </span>
                 <span className="text-[11px] text-text-muted font-mono">{item.sku}</span>
               </div>

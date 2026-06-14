@@ -159,10 +159,10 @@ export default function CatalogView({
         {displayedItems.length > 0 ? (
           displayedItems.map((item) => {
             const isUnavailable = item.status === Status.Terjual || item.status === Status.Dipesan;
-            const conditionLabel = item.grade === "A" ? "Baru" : "Bekas";
+            const conditionLabel = item.kondisi;
             
             // Mock recommendation logic
-            const isRecommended = item.grade === "A" || Number(item.price) > 5000000;
+            const isRecommended = item.kondisi === "Baru" || Number(item.price) > 5000000;
 
             return (
               <button
@@ -312,8 +312,8 @@ export default function CatalogView({
               <div className="p-5 sm:p-6 space-y-5">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-black text-white ${selectedItem.grade === 'A' ? 'bg-green-500' : 'bg-slate-700'}`}>
-                      {selectedItem.grade === 'A' ? 'Baru' : 'Bekas'}
+                    <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-black text-white ${selectedItem.kondisi === 'Baru' ? 'bg-green-500' : 'bg-slate-700'}`}>
+                      {selectedItem.kondisi === 'Baru' ? 'Baru' : 'Bekas'}
                     </span>
                     <span className="px-2.5 py-1 rounded-md text-[10px] uppercase font-black bg-brand-100 text-brand-700">
                       {selectedItem.category}
@@ -335,7 +335,7 @@ export default function CatalogView({
                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Deskripsi Produk</h3>
                   <div className="whitespace-pre-wrap">{selectedItem.description}</div>
                   
-                  {selectedItem.defects && selectedItem.grade !== 'A' && (
+                  {selectedItem.defects && selectedItem.kondisi !== 'Baru' && (
                     <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
                       <h4 className="text-sm font-bold text-amber-900 mb-1 flex items-center gap-1.5">
                          Kondisi / Minus:

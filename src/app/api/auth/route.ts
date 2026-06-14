@@ -1,27 +1,52 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { encrypt } from "@/lib/session";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { password } = body;
+  try {
+    const body = await request.json();
+    const { email, password } = body;
 
-  // Secure password check using environment variable
-  if (password === process.env.ADMIN_PASSWORD) {
-    const response = NextResponse.json({ success: true });
-    response.cookies.set("mbg_session", "authenticated", {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return NextResponse.json({ success: false, message: "Email atau password salah" }, { status: 401 });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return NextResponse.json({ success: false, message: "Email atau password salah" }, { status: 401 });
+    }
+
+    const sessionData = {
+      id: user.id,
+      email: user.email,
+      nama_lengkap: user.nama_lengkap,
+      asal_cabang: user.asal_cabang,
+      role: user.role,
+    };
+
+    const sessionToken = await encrypt(sessionData);
+
+    const cookieStore = await cookies();
+    cookieStore.set("mbg_session", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24, // 1 day
       path: "/",
     });
-    return response;
-  }
 
-  return NextResponse.json({ success: false, message: "Password salah" }, { status: 401 });
+    return NextResponse.json({ success: true, user: sessionData });
+  } catch (error) {
+    console.error("Login error:", error);
+    return NextResponse.json({ success: false, message: "Terjadi kesalahan server" }, { status: 500 });
+  }
 }
 
 export async function DELETE() {
-  const response = NextResponse.json({ success: true });
-  response.cookies.delete("mbg_session");
-  return response;
+  const cookieStore = await cookies();
+  cookieStore.delete("mbg_session");
+  return NextResponse.json({ success: true });
 }

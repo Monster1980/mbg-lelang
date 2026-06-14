@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { decrypt } from './lib/session';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const session = request.cookies.get('mbg_session');
-  const isAuthenticated = session && session.value === 'authenticated';
+  const sessionCookie = request.cookies.get('mbg_session')?.value;
+  
+  const payload = await decrypt(sessionCookie);
+  const isAuthenticated = !!payload;
 
   // 1. Protect API Admin routes
   if (pathname.startsWith('/api/admin')) {
@@ -16,12 +19,10 @@ export function middleware(request: NextRequest) {
   // 2. Protect Admin Web routes
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin/login') {
-      // If already authenticated and trying to access login page, redirect to dashboard
       if (isAuthenticated) {
         return NextResponse.redirect(new URL('/admin', request.url));
       }
     } else {
-      // If unauthenticated and trying to access any other admin page, redirect to login
       if (!isAuthenticated) {
         return NextResponse.redirect(new URL('/admin/login', request.url));
       }

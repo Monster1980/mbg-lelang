@@ -3,28 +3,46 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import ReportClient from "./ReportClient";
 
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+
 export default async function SalesReportPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
+  const session = await getSession();
+  if (!session) {
+    redirect("/admin/login");
+  }
+
   const resolvedParams = await searchParams;
-  const branchFilter = resolvedParams.branch;
   const startDate = resolvedParams.start;
   const endDate = resolvedParams.end;
+  const branchFilter = resolvedParams.branch;
+
+  const isSuperAdmin = session.role === "SUPERADMIN";
 
   let dateFilter = {};
-  if (startDate || endDate) {
+  if (startDate && endDate) {
     dateFilter = {
       transactionDate: {
-        ...(startDate ? { gte: new Date(startDate) } : {}),
-        ...(endDate ? { lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)) } : {}),
+        gte: new Date(startDate),
+        lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
       }
     };
   }
 
+  // Enforce branch security lock: Superadmin can query any/all branches, regular admins are locked
+  let branchNameFilter = undefined;
+  if (!isSuperAdmin) {
+    branchNameFilter = session.asal_cabang;
+  } else if (branchFilter && branchFilter !== "all") {
+    branchNameFilter = branchFilter;
+  }
+
   const where = {
-    ...(branchFilter ? { branchName: branchFilter } : {}),
+    ...(branchNameFilter ? { branchName: branchNameFilter } : {}),
     ...dateFilter
   };
 
@@ -36,11 +54,18 @@ export default async function SalesReportPage({
     }
   });
 
-  const branches = await prisma.salesTransaction.groupBy({
-    by: ["branchName"],
-  });
+  // Get list of branches: Superadmin gets all branches in DB, regular admin gets only their own
+  let branchList: string[] = [];
+  if (isSuperAdmin) {
+    const branches = await prisma.salesTransaction.groupBy({
+      by: ["branchName"],
+    });
+    branchList = branches.map(b => b.branchName);
+  } else {
+    branchList = [session.asal_cabang];
+  }
 
-  const branchList = branches.map(b => b.branchName);
+  const currentBranch = isSuperAdmin ? (branchFilter || "all") : session.asal_cabang;
 
   // Serialize objects to avoid Client Component errors with Decimal and Date
   const serializedTransactions = JSON.parse(JSON.stringify(transactions));
@@ -49,9 +74,10 @@ export default async function SalesReportPage({
     <ReportClient 
       initialTransactions={serializedTransactions} 
       branchList={branchList} 
-      currentBranch={branchFilter || ""}
+      currentBranch={currentBranch}
       currentStart={startDate || ""}
       currentEnd={endDate || ""}
+      isSuperAdmin={isSuperAdmin}
     />
   );
 }

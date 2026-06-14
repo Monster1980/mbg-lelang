@@ -13,16 +13,24 @@ export async function POST(request: Request) {
       );
     }
 
+    const trimmedSku = body.sku.trim();
+    if (!/^\d+$/.test(trimmedSku)) {
+      return NextResponse.json(
+        { success: false, message: "SKU harus berupa angka saja." },
+        { status: 400 }
+      );
+    }
+
     // Create item with manual SKU
     const newItem = await prisma.auctionItem.create({
       data: {
-        sku: body.sku.trim(),
+        sku: trimmedSku,
         branchName: body.branchName,
         title: body.title,
         category: body.category,
         description: body.description,
         defects: body.defects || null,
-        grade: body.grade,
+        kondisi: body.kondisi,
         price: body.price,
         status: "Tersedia",
         images: body.images || [],
