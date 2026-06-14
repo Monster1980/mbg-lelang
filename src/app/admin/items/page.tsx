@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { PlusCircle, ExternalLink, Printer, PackageSearch } from "lucide-react";
