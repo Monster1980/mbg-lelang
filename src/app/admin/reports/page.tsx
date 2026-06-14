@@ -46,21 +46,24 @@ export default async function SalesReportPage({
     ...dateFilter
   };
 
-  const transactions = await prisma.salesTransaction.findMany({
-    where,
-    orderBy: { transactionDate: "desc" },
-    include: {
-      item: { select: { title: true, category: true } }
-    }
-  });
-
-  // Get list of branches: Superadmin gets all branches in DB, regular admin gets only their own
-  let branchList: string[] = [];
-  if (isSuperAdmin) {
-    const branches = await prisma.salesTransaction.groupBy({
+  // Parallelize database queries to significantly reduce latency
+  const [transactions, branchGroup] = await Promise.all([
+    prisma.salesTransaction.findMany({
+      where,
+      orderBy: { transactionDate: "desc" },
+      include: {
+        item: { select: { title: true, category: true } }
+      }
+    }),
+    isSuperAdmin ? prisma.salesTransaction.groupBy({
       by: ["branchName"],
-    });
-    branchList = branches.map(b => b.branchName);
+    }) : Promise.resolve(null)
+  ]);
+
+  // Get list of branches
+  let branchList: string[] = [];
+  if (isSuperAdmin && branchGroup) {
+    branchList = branchGroup.map(b => b.branchName);
   } else {
     branchList = [session.asal_cabang];
   }

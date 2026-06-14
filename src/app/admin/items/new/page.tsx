@@ -148,27 +148,27 @@ export default function AddItemPage() {
   const totalOriginal = compressedImages.reduce((acc, img) => acc + img.originalSize, 0);
 
   const inputClassName =
-    "w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-sm";
+    "w-full bg-white border border-slate-300 rounded-xl px-4 py-3 md:py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-sm text-base md:text-sm";
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-12">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Tambah Barang Baru</h1>
-        <p className="text-slate-500 mt-1">
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Tambah Barang Baru</h1>
+        <p className="text-sm md:text-base text-slate-500 mt-1">
           Masukkan detail barang lelang atau preloved ke dalam katalog.
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-md">
+      <div className="bg-white rounded-2xl p-5 md:p-8 border border-slate-200 shadow-md">
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <p className="font-medium">{error}</p>
+            <p className="font-medium text-sm md:text-base">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 
             {/* ROW 1 */}
             <div>
@@ -218,11 +218,11 @@ export default function AddItemPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">Status Kondisi Barang</label>
-              <div className="flex gap-3">
+              <div className="flex gap-3 h-12 md:h-11">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, kondisi: "Baru" })}
-                  className={`flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
+                  className={`flex-1 px-4 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
                     formData.kondisi === "Baru"
                       ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-500/20"
                       : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
@@ -233,7 +233,7 @@ export default function AddItemPage() {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, kondisi: "Bekas" })}
-                  className={`flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
+                  className={`flex-1 px-4 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
                     formData.kondisi === "Bekas"
                       ? "border-slate-700 bg-slate-100 text-slate-800 ring-2 ring-slate-500/20"
                       : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
@@ -280,14 +280,14 @@ export default function AddItemPage() {
             {/* ROW 4 */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">Lokasi Cabang</label>
-              <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-500 font-medium flex items-center gap-2 cursor-not-allowed shadow-sm">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-                MBG Cabang Pasuruan (Terkunci)
+              <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 md:py-2.5 text-slate-500 text-base md:text-sm font-medium flex items-center gap-2 cursor-not-allowed shadow-sm">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0"></span>
+                <span className="truncate">MBG Cabang Pasuruan (Terkunci)</span>
               </div>
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Video className="w-4 h-4 text-red-500" />
+                <Video className="w-4 h-4 text-red-500 shrink-0" />
                 Link Video Demo YouTube (Opsional)
               </label>
               <input
@@ -321,7 +321,7 @@ export default function AddItemPage() {
                 rows={5}
                 value={formData.defects}
                 onChange={(e) => setFormData({ ...formData, defects: e.target.value })}
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all shadow-sm"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 md:py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all shadow-sm text-base md:text-sm"
                 placeholder="Catat jika ada lecet, kerusakan kecil, dll."
               />
             </div>
@@ -334,10 +334,10 @@ export default function AddItemPage() {
             </label>
 
             <div className="space-y-4">
-              <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-brand-500 transition-all">
+              <label className="flex flex-col items-center justify-center w-full h-40 md:h-36 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-brand-500 transition-all">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <UploadCloud className="w-10 h-10 text-slate-400 mb-2" />
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-slate-600 text-center px-4">
                     <span className="font-semibold text-brand-600">Klik untuk upload gambar</span> (bisa pilih banyak)
                   </p>
                   <p className="text-xs text-slate-400 mt-1">Maks. 5MB per file, format JPG/PNG</p>
@@ -359,12 +359,12 @@ export default function AddItemPage() {
                       {compressedImages.length} gambar terupload
                     </p>
                     {totalOriginal > 0 && (
-                      <p className="text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-lg border border-green-200">
+                      <p className="hidden sm:block text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-lg border border-green-200">
                         Total hemat: {Math.round((totalSaved / totalOriginal) * 100)}% ({formatBytes(totalSaved)})
                       </p>
                     )}
                   </div>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
                     {compressedImages.map((img, idx) => (
                       <div
                         key={idx}
@@ -378,11 +378,11 @@ export default function AddItemPage() {
                         <button
                           type="button"
                           onClick={() => removeImage(idx)}
-                          className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                          className="absolute top-2 right-2 w-8 h-8 md:w-6 md:h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <X className="w-4 h-4 md:w-3.5 md:h-3.5" />
                         </button>
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[9px] text-center py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] md:text-[9px] text-center py-1 md:py-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           {formatBytes(img.compressedSize)}
                         </div>
                       </div>
@@ -394,14 +394,14 @@ export default function AddItemPage() {
           </div>
 
           {/* ─── QR Code Preview + Submit ──────────────────────────────────────── */}
-          <div className="border-t border-slate-200 pt-6 mt-2 flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
+          <div className="border-t border-slate-200 pt-6 mt-2 flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
             {/* QR Code Preview */}
             {formData.sku.trim() && (
-              <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm">
-                <div className="bg-white p-2 rounded-lg border border-slate-100">
+              <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm w-full md:w-auto">
+                <div className="bg-white p-2 rounded-lg border border-slate-100 shrink-0">
                   <QRCodeSVG
                     value={formData.sku.trim()}
-                    size={80}
+                    size={64}
                     level="M"
                     bgColor="#ffffff"
                     fgColor="#0f172a"
@@ -411,8 +411,8 @@ export default function AddItemPage() {
                   <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1">
                     <QrCode className="w-3.5 h-3.5" /> QR Code Preview
                   </p>
-                  <p className="text-[11px] text-slate-500 font-mono">{formData.sku.trim()}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">QR akan tersedia setelah disimpan</p>
+                  <p className="text-[11px] text-slate-500 font-mono break-all line-clamp-1">{formData.sku.trim()}</p>
+                  <p className="text-[10px] text-slate-400 mt-1">QR tersedia setelah simpan</p>
                 </div>
               </div>
             )}
@@ -420,7 +420,7 @@ export default function AddItemPage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold shadow-md hover:shadow-lg hover:shadow-brand-500/20 transition-all disabled:opacity-70 disabled:hover:shadow-md flex items-center gap-2 ml-auto"
+              className="w-full md:w-auto px-8 py-3.5 md:py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold shadow-md hover:shadow-lg hover:shadow-brand-500/20 transition-all disabled:opacity-70 disabled:hover:shadow-md flex justify-center items-center gap-2"
             >
               {loading ? "Menyimpan..." : "Simpan Barang"}
             </button>

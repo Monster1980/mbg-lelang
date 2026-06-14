@@ -58,8 +58,8 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
         </p>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+      {/* Desktop Table (hidden on mobile) */}
+      <div className="hidden md:block bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
@@ -117,6 +117,52 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Card List (visible only on mobile) */}
+      <div className="block md:hidden space-y-3">
+        {filteredItems.map((item) => (
+          <div key={item.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+            <div className="flex justify-between items-start gap-2">
+              <div className="flex-1">
+                <h3 className="font-bold text-slate-900 text-sm line-clamp-2 leading-tight">{item.title}</h3>
+                <p className="text-xs text-slate-500 font-mono mt-1">SKU: {item.sku}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">{item.branchName}</p>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-slate-900 text-sm">{formatIDR(item.price)}</div>
+              </div>
+            </div>
+            <div className="flex justify-between items-center pt-2 border-t border-slate-50">
+              <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold ${
+                item.status === 'Tersedia' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                item.status === 'Dipesan' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+                {item.status}
+              </span>
+              <div className="flex gap-3">
+                <Link href={`/admin/items/${item.id}`} className="text-slate-400 hover:text-slate-700 p-1 bg-slate-50 rounded-md">
+                  <Printer className="w-4 h-4" />
+                </Link>
+                <Link href={`/katalog/${item.id}`} target="_blank" className="text-slate-400 hover:text-slate-700 p-1 bg-slate-50 rounded-md">
+                  <ExternalLink className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        ))}
+        {filteredItems.length === 0 && (
+          <div className="py-8 text-center text-slate-500 bg-white border border-slate-200 rounded-xl shadow-sm">
+            <PackageSearch className="w-10 h-10 mb-2 opacity-20 mx-auto" />
+            <p className="text-sm">
+              {searchQuery.trim()
+                ? `Tidak ada barang.`
+                : "Belum ada barang."
+              }
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

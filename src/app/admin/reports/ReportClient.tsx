@@ -185,7 +185,8 @@ export default function ReportClient({
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+      {/* Desktop Table (hidden on mobile) */}
+      <div className="hidden md:block bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-700">
@@ -237,6 +238,37 @@ export default function ReportClient({
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Card List (visible only on mobile) */}
+      <div className="block md:hidden space-y-3">
+        {initialTransactions.map((tx) => (
+          <div key={tx.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+            <div className="flex justify-between items-start gap-2">
+              <div>
+                <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-600 mb-1 inline-block">
+                  {tx.sku}
+                </span>
+                <h3 className="font-bold text-slate-900 text-sm line-clamp-2 leading-tight">{tx.item.title}</h3>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  {new Date(tx.transactionDate).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })} • {new Date(tx.transactionDate).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+              <div className="text-right whitespace-nowrap">
+                <div className="font-bold text-slate-900 text-sm">{formatIDR(tx.soldPrice)}</div>
+              </div>
+            </div>
+            <div className="pt-2 border-t border-slate-50 text-[11px] flex justify-between text-slate-600">
+              <span className="truncate pr-2">{tx.branchName}</span>
+              <span className="font-medium whitespace-nowrap shrink-0">Kasir: {tx.cashierName}</span>
+            </div>
+          </div>
+        ))}
+        {initialTransactions.length === 0 && (
+          <div className="py-8 text-center text-slate-500 bg-white border border-slate-200 rounded-xl shadow-sm">
+            <p className="text-sm">Tidak ada transaksi.</p>
+          </div>
+        )}
       </div>
     </div>
   );

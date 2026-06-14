@@ -39,31 +39,31 @@ async function DashboardData() {
   const endDate = new Date(today);
   endDate.setHours(23, 59, 59, 999);
 
-  // Active items
-  const totalActive = await prisma.auctionItem.count({
-    where: { status: "Tersedia" }
-  });
-
-  // Sales in range
-  const sales = await prisma.salesTransaction.findMany({
-    where: {
-      transactionDate: {
-        gte: startDate,
-        lte: endDate
-      }
-    },
-    include: {
-      item: {
-        select: {
-          title: true,
-          category: true
+  // Parallelize queries to eliminate sequential blocking and reduce TTFB latency
+  const [totalActive, sales] = await Promise.all([
+    prisma.auctionItem.count({
+      where: { status: "Tersedia" }
+    }),
+    prisma.salesTransaction.findMany({
+      where: {
+        transactionDate: {
+          gte: startDate,
+          lte: endDate
         }
+      },
+      include: {
+        item: {
+          select: {
+            title: true,
+            category: true
+          }
+        }
+      },
+      orderBy: {
+        transactionDate: "desc"
       }
-    },
-    orderBy: {
-      transactionDate: "desc"
-    }
-  });
+    })
+  ]);
 
   const totalSold = sales.length;
   const totalRevenue = sales.reduce((sum, tx) => sum + Number(tx.soldPrice), 0);

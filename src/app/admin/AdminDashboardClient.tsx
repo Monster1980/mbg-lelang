@@ -139,15 +139,15 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
       )}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
         {statCards.map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl p-6 flex items-center gap-5 border border-slate-200 shadow-sm">
-            <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${stat.bg}`}>
-              <stat.icon className={`w-7 h-7 ${stat.color}`} />
+          <div key={i} className={`bg-white rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-5 border border-slate-200 shadow-sm ${i === 2 ? 'col-span-2 md:col-span-1' : ''}`}>
+            <div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl flex items-center justify-center ${stat.bg} shrink-0`}>
+              <stat.icon className={`w-5 h-5 md:w-7 md:h-7 ${stat.color}`} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">{stat.title}</p>
-              <h3 className="text-2xl font-black text-slate-900">{stat.value}</h3>
+              <p className="text-[11px] md:text-sm font-medium text-slate-500 mb-0.5 md:mb-1 leading-tight">{stat.title}</p>
+              <h3 className="text-lg md:text-2xl font-black text-slate-900 leading-none">{stat.value}</h3>
             </div>
           </div>
         ))}
@@ -162,11 +162,11 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
           </div>
         </div>
 
-        <div className="p-6">
-          <div className="h-80 w-full">
+        <div className="p-4 md:p-6">
+          <div className="w-full">
             {data.dailySalesData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data.dailySalesData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={data.dailySalesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15} />
@@ -194,7 +194,7 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+              <div className="w-full h-[300px] flex items-center justify-center text-slate-400 text-sm">
                 Tidak ada data tren penjualan pada periode ini.
               </div>
             )}
@@ -208,7 +208,7 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
             <span className="text-xs text-slate-500 font-medium">Menampilkan maks. 15 transaksi</span>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider">
                 <tr>
@@ -244,6 +244,33 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Recent Transactions List */}
+          <div className="block md:hidden bg-slate-50 p-3 space-y-3">
+            {data.recentTransactions.map((tx) => (
+              <div key={tx.id} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col gap-2">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <span className="font-mono text-[9px] bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-600 mb-1 inline-block">
+                      TX-{String(tx.id).padStart(5, "0")} • {tx.sku}
+                    </span>
+                    <h3 className="font-bold text-slate-900 text-xs line-clamp-1">{tx.itemTitle}</h3>
+                    <p className="text-[9px] text-slate-500 mt-0.5">
+                      {formatDateString(tx.transactionDate)}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-bold text-green-600 text-xs">{formatIDR(tx.soldPrice)}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {data.recentTransactions.length === 0 && (
+              <div className="py-6 text-center text-slate-400 text-xs">
+                Belum ada transaksi terekam.
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -256,9 +283,9 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
             <h3 className="text-base font-bold text-slate-900">Distribusi Kategori Penjualan</h3>
             <p className="text-xs text-slate-500 mt-0.5">Proporsi item terjual berdasarkan kategori produk.</p>
           </div>
-          <div className="h-64 w-full my-6 flex items-center justify-center">
+          <div className="w-full my-4 flex items-center justify-center">
             {data.categoryData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie
                     data={data.categoryData}
@@ -281,7 +308,7 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-slate-400 text-sm">Tidak ada data distribusi kategori.</div>
+              <div className="text-slate-400 text-sm h-[260px] flex items-center justify-center">Tidak ada data distribusi kategori.</div>
             )}
           </div>
         </div>
@@ -292,10 +319,10 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
             <h3 className="text-base font-bold text-slate-900">Performa Pendapatan per Kasir</h3>
             <p className="text-xs text-slate-500 mt-0.5">Total omzet penjualan yang dicatat oleh masing-masing kasir.</p>
           </div>
-          <div className="h-64 w-full my-6">
+          <div className="w-full my-4">
             {data.cashierData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.cashierData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={data.cashierData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis
@@ -317,7 +344,7 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+              <div className="w-full h-[260px] flex items-center justify-center text-slate-400 text-sm">
                 Tidak ada data performa kasir.
               </div>
             )}

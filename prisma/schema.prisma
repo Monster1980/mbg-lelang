@@ -65,6 +65,8 @@ model AuctionItem {
   // Relation to sales transactions
   transactions SalesTransaction[]
 
+  @@index([status])
+  @@index([branchName])
   @@map("auction_items")
 }
 
@@ -81,5 +83,8 @@ model SalesTransaction {
   // Relation to the auction item
   item AuctionItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
+  @@index([transactionDate])
+  @@index([branchName])
+  @@index([branchName, transactionDate])
   @@map("sales_transactions")
 }
