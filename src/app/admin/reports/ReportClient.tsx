@@ -52,9 +52,9 @@ export default function ReportClient({
       params.set("branch", branch);
     }
 
-    if (dateRange.from && dateRange.to) {
+    if (dateRange.from) {
       const startStr = dateRange.from.toISOString().split("T")[0];
-      const endStr = dateRange.to.toISOString().split("T")[0];
+      const endStr = dateRange.to ? dateRange.to.toISOString().split("T")[0] : startStr;
       params.set("start", startStr);
       params.set("end", endStr);
     }
@@ -74,9 +74,9 @@ export default function ReportClient({
     if (branch) {
       params.set("branch", branch);
     }
-    if (dateRange.from && dateRange.to) {
+    if (dateRange.from) {
       const startStr = dateRange.from.toISOString().split("T")[0];
-      const endStr = dateRange.to.toISOString().split("T")[0];
+      const endStr = dateRange.to ? dateRange.to.toISOString().split("T")[0] : startStr;
       params.set("start", startStr);
       params.set("end", endStr);
     }

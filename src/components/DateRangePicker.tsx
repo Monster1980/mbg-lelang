@@ -295,7 +295,7 @@ export default function DateRangePicker({ value, onChange, placeholder = "Pilih 
                             
                             if (!selectingFrom || (selectingFrom && value.to)) {
                               setSelectingFrom(d);
-                              onChange({ from: d, to: d });
+                              onChange({ from: d, to: null });
                             } else {
                               let from = selectingFrom;
                               let to = d;
