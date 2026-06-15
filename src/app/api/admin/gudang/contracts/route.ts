@@ -106,61 +106,6 @@ export async function PATCH(request: Request) {
       },
     });
 
-    const physicalItem = contract.physicalItem;
-
-    // ═══════════════════════════════════════════════════════════════════
-    // CRITICAL PIPELINE: LELANG → Auto-create AuctionItem for marketplace
-    // ═══════════════════════════════════════════════════════════════════
-    if (newStatus === PawnStatus.LELANG) {
-      // Check if a marketplace listing already exists for this physical item
-      const existingListing = await prisma.auctionItem.findFirst({
-        where: { physicalItemId: physicalItem.id },
-      });
-
-      if (!existingListing) {
-        // Generate SKU from timestamp
-        const skuBase = Date.now().toString().slice(-8);
-
-        await prisma.auctionItem.create({
-          data: {
-            sku: skuBase,
-            branchName: physicalItem.branchName,
-            title: physicalItem.itemName,
-            category: physicalItem.category,
-            description: physicalItem.description || "Barang lelang gadai — silakan hubungi admin untuk detail.",
-            kondisi: "Bekas",
-            price: priceForSale ? parseFloat(priceForSale) : Number(contract.appraisalValue),
-            status: "Tersedia",
-            images: physicalItem.images,
-            whatsappNumber: whatsappNumber || "08123456789",
-            physicalItemId: physicalItem.id,
-          },
-        });
-      } else {
-        // Reactivate existing listing
-        await prisma.auctionItem.update({
-          where: { id: existingListing.id },
-          data: { status: "Tersedia" },
-        });
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // REVERSE PIPELINE: Non-LELANG → Hide from marketplace
-    // ═══════════════════════════════════════════════════════════════════
-    if (newStatus === PawnStatus.AKTIF || newStatus === PawnStatus.DIPERPANJANG || newStatus === PawnStatus.LUNAS) {
-      // If there's an active marketplace listing for this item, disable it
-      await prisma.auctionItem.updateMany({
-        where: {
-          physicalItemId: physicalItem.id,
-          status: "Tersedia",
-        },
-        data: {
-          status: "Terjual",
-        },
-      });
-    }
-
     const serialized = JSON.parse(JSON.stringify(updatedContract));
     return NextResponse.json({ success: true, data: serialized });
   } catch (error: any) {

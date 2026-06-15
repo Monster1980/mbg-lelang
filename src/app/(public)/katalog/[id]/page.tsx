@@ -28,11 +28,12 @@ export default async function DetailPage({ params }: Props) {
       whatsappNumber: true,
       youtubeUrl: true,
       createdAt: true,
+      isMarketplaceVisible: true,
       // physicalItemId intentionally excluded for public privacy
     },
   });
 
-  if (!item) {
+  if (!item || !item.isMarketplaceVisible) {
     notFound();
   }
 

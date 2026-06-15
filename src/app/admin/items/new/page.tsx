@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import imageCompression from "browser-image-compression";
 import { UploadCloud, CheckCircle, AlertCircle, X, Video, QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -12,11 +12,18 @@ type CompressedImage = {
   compressedSize: number;
 };
 
-export default function AddItemPage() {
+function AddItemForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromPhysical = searchParams.get("fromPhysical");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [compressedImages, setCompressedImages] = useState<CompressedImage[]>([]);
+
+  const [physicalItemId, setPhysicalItemId] = useState<string | null>(null);
+  const [serialNumber, setSerialNumber] = useState<string | null>(null);
+  const [isFromPhysical, setIsFromPhysical] = useState(false);
 
   const [formData, setFormData] = useState({
     sku: "",
@@ -30,6 +37,43 @@ export default function AddItemPage() {
     defects: "",
     youtubeUrl: "",
   });
+
+  useEffect(() => {
+    if (fromPhysical) {
+      setLoading(true);
+      setError("");
+      fetch(`/api/admin/gudang?id=${fromPhysical}`)
+        .then((res) => res.json())
+        .then((resData) => {
+          if (resData.success && resData.data) {
+            const item = resData.data;
+            setPhysicalItemId(item.id);
+            setSerialNumber(item.serialNumber);
+            setIsFromPhysical(true);
+
+            // Auto generate numeric SKU
+            const generatedSku = Date.now().toString().slice(-8);
+
+            setFormData((prev) => ({
+              ...prev,
+              sku: generatedSku,
+              title: item.itemName,
+              branchName: item.branchName,
+              category: item.category,
+              kondisi: "Bekas", // Forfeited pawn items are always Bekas
+            }));
+          } else {
+            setError(resData.message || "Gagal memuat data barang gudang.");
+          }
+        })
+        .catch(() => {
+          setError("Gagal menghubungi server untuk memuat data barang.");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [fromPhysical]);
 
   // ─── Currency Masking ──────────────────────────────────────────────────────
   const formatCurrency = (value: string): string => {
@@ -84,7 +128,6 @@ export default function AddItemPage() {
     }
 
     setCompressedImages((prev) => [...prev, ...newImages]);
-    // Reset input so the same files can be re-selected
     e.target.value = "";
   };
 
@@ -112,6 +155,8 @@ export default function AddItemPage() {
           ? compressedImages.map((img) => img.url)
           : ["https://placehold.co/800x600/f1f5f9/94a3b8?text=No+Image"],
         youtubeUrl: formData.youtubeUrl.trim() || null,
+        physicalItemId,
+        isMarketplaceVisible: true,
       };
 
       const res = await fetch("/api/items", {
@@ -135,7 +180,6 @@ export default function AddItemPage() {
     }
   };
 
-  // ─── Helpers ───────────────────────────────────────────────────────────────
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -155,7 +199,9 @@ export default function AddItemPage() {
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Tambah Barang Baru</h1>
         <p className="text-sm md:text-base text-slate-500 mt-1">
-          Masukkan detail barang lelang atau preloved ke dalam katalog.
+          {isFromPhysical
+            ? "Verifikasi dan lengkapi detail barang lelang dari gudang untuk dipublikasikan."
+            : "Masukkan detail barang lelang atau preloved ke dalam katalog."}
         </p>
       </div>
 
@@ -169,7 +215,6 @@ export default function AddItemPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-
             {/* ROW 1 */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -196,48 +241,60 @@ export default function AddItemPage() {
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className={inputClassName}
+                className={`${inputClassName} ${isFromPhysical ? "bg-slate-50 cursor-not-allowed text-slate-500" : ""}`}
                 placeholder="Contoh: iPhone 13 Pro Max"
+                readOnly={isFromPhysical}
               />
+              {isFromPhysical && (
+                <p className="text-xs text-slate-400 mt-1">Nama barang diwarisi secara permanen dari database gudang.</p>
+              )}
             </div>
 
             {/* ROW 2 */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">Kategori</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className={inputClassName}
-              >
-                <option>Elektronik</option>
-                <option>Fashion</option>
-                <option>Perhiasan</option>
-                <option>Jam Tangan</option>
-                <option>Lainnya</option>
-              </select>
+              {isFromPhysical ? (
+                <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 md:py-2.5 text-slate-500 text-base md:text-sm font-medium cursor-not-allowed shadow-sm">
+                  {formData.category}
+                </div>
+              ) : (
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className={inputClassName}
+                >
+                  <option>Elektronik</option>
+                  <option>Fashion</option>
+                  <option>Perhiasan</option>
+                  <option>Jam Tangan</option>
+                  <option>Lainnya</option>
+                </select>
+              )}
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">Status Kondisi Barang</label>
               <div className="flex gap-3 h-12 md:h-11">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, kondisi: "Baru" })}
+                  onClick={() => !isFromPhysical && setFormData({ ...formData, kondisi: "Baru" })}
+                  disabled={isFromPhysical}
                   className={`flex-1 px-4 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
                     formData.kondisi === "Baru"
                       ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-500/20"
                       : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
-                  }`}
+                  } ${isFromPhysical ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   ✨ Baru
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, kondisi: "Bekas" })}
+                  onClick={() => !isFromPhysical && setFormData({ ...formData, kondisi: "Bekas" })}
+                  disabled={isFromPhysical}
                   className={`flex-1 px-4 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
                     formData.kondisi === "Bekas"
                       ? "border-slate-700 bg-slate-100 text-slate-800 ring-2 ring-slate-500/20"
                       : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
-                  }`}
+                  } ${isFromPhysical ? "border-slate-700 bg-slate-100 text-slate-800" : ""}`}
                 >
                   ♻️ Bekas
                 </button>
@@ -247,7 +304,7 @@ export default function AddItemPage() {
             {/* ROW 3 */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                Harga (Rp) <span className="text-red-500">*</span>
+                Harga Jual (Rp) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">Rp</span>
@@ -282,7 +339,7 @@ export default function AddItemPage() {
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">Lokasi Cabang</label>
               <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 md:py-2.5 text-slate-500 text-base md:text-sm font-medium flex items-center gap-2 cursor-not-allowed shadow-sm">
                 <span className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0"></span>
-                <span className="truncate">MBG Cabang Pasuruan (Terkunci)</span>
+                <span className="truncate">{formData.branchName} (Terkunci)</span>
               </div>
             </div>
             <div>
@@ -299,10 +356,34 @@ export default function AddItemPage() {
               />
             </div>
 
+            {/* IMMUTABLE INHERITED FIELDS FOR WAREHOUSE BRIDGE */}
+            {isFromPhysical && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Serial Number</label>
+                  <input
+                    type="text"
+                    value={serialNumber || "Tidak Ada"}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 md:py-2.5 text-slate-500 text-base md:text-sm font-medium cursor-not-allowed shadow-sm"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">ID Barang Fisik</label>
+                  <input
+                    type="text"
+                    value={physicalItemId || ""}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 md:py-2.5 text-slate-500 text-base md:text-sm font-medium cursor-not-allowed shadow-sm font-mono"
+                    readOnly
+                  />
+                </div>
+              </>
+            )}
+
             {/* ROW 5 - Textareas */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                Deskripsi Barang <span className="text-red-500">*</span>
+                Deskripsi Marketplace <span className="text-red-500">*</span>
               </label>
               <textarea
                 required
@@ -310,7 +391,7 @@ export default function AddItemPage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className={inputClassName}
-                placeholder="Spesifikasi dan kelengkapan..."
+                placeholder="Spesifikasi, kelengkapan, dan informasi penting untuk pembeli..."
               />
             </div>
             <div>
@@ -330,7 +411,7 @@ export default function AddItemPage() {
           {/* ─── Multiple Image Upload ─────────────────────────────────────────── */}
           <div className="border-t border-slate-200 pt-6 mt-2">
             <label className="block text-sm font-semibold text-slate-700 mb-3">
-              Upload Gambar (Bisa Banyak, Otomatis Dikompres)
+              Upload Gambar Marketplace (Wajib Upload Manual)
             </label>
 
             <div className="space-y-4">
@@ -428,5 +509,13 @@ export default function AddItemPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function AddItemPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Memuat form...</div>}>
+      <AddItemForm />
+    </Suspense>
   );
 }

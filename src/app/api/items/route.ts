@@ -36,6 +36,8 @@ export async function POST(request: Request) {
         images: body.images || [],
         whatsappNumber: body.whatsappNumber,
         youtubeUrl: body.youtubeUrl || null,
+        physicalItemId: body.physicalItemId || null,
+        isMarketplaceVisible: body.isMarketplaceVisible !== undefined ? body.isMarketplaceVisible : true,
       }
     });
 
@@ -71,6 +73,7 @@ export async function GET(request: Request) {
       status: {
         notIn: ["Terjual", "Dipesan"],
       },
+      isMarketplaceVisible: true,
     };
 
     if (category && category !== "Semua Kategori") {

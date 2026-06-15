@@ -64,6 +64,7 @@ model AuctionItem {
   kondisi         Kondisi
   price           Decimal  @db.Decimal(12, 2)
   status          Status   @default(Tersedia)
+  isMarketplaceVisible Boolean @default(true) @map("is_marketplace_visible")
   images          String[] // Array of image URLs
   whatsappNumber  String   @map("whatsapp_number")
   youtubeUrl      String?  @map("youtube_url")

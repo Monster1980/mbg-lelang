@@ -57,7 +57,7 @@ export default async function GudangPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link
           href="/admin/gudang/stock-opname"
           className="group bg-white border border-slate-200 rounded-2xl p-6 hover:border-brand-300 hover:shadow-lg transition-all flex items-start gap-4"
@@ -70,6 +70,22 @@ export default async function GudangPage() {
             <p className="text-sm text-slate-500 mb-3">Scan kode unik untuk melihat riwayat lengkap & lokasi rak barang.</p>
             <div className="flex items-center text-sm font-bold text-brand-600 gap-1">
               Buka Scanner <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/gudang/laporan-siap-lelang"
+          className="group bg-white border border-slate-200 rounded-2xl p-6 hover:border-brand-300 hover:shadow-lg transition-all flex items-start gap-4"
+        >
+          <div className="p-3 bg-amber-100 rounded-xl group-hover:bg-amber-200 transition-colors">
+            <Gavel className="w-6 h-6 text-amber-700" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-slate-900 mb-1 group-hover:text-brand-700 transition-colors">Laporan Siap Lelang</h3>
+            <p className="text-sm text-slate-500 mb-3">Daftar barang jatuh tempo yang siap dipublikasikan manual ke marketplace.</p>
+            <div className="flex items-center text-sm font-bold text-brand-600 gap-1">
+              Buka Laporan <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         </Link>

@@ -18,6 +18,7 @@ export default async function PublicHomePage({ searchParams }: Props) {
     status: {
       notIn: [Status.Terjual, Status.Dipesan],
     },
+    isMarketplaceVisible: true,
   };
 
   const items = await prisma.auctionItem.findMany({
@@ -36,11 +37,15 @@ export default async function PublicHomePage({ searchParams }: Props) {
       status: {
         notIn: [Status.Terjual, Status.Dipesan],
       },
+      isMarketplaceVisible: true,
     },
   });
 
   const branches = await prisma.auctionItem.groupBy({
     by: ["branchName"],
+    where: {
+      isMarketplaceVisible: true,
+    },
   });
 
   // Serialize items to prevent "Only plain objects can be passed to Client Components" error

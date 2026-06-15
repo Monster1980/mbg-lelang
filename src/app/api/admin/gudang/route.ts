@@ -1,10 +1,32 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET — List all PhysicalItem records with latest contract status
+// GET — List all PhysicalItem records with latest contract status, or fetch single by ID
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (id) {
+      const item = await prisma.physicalItem.findUnique({
+        where: { id },
+        include: {
+          contracts: {
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+
+      if (!item) {
+        return NextResponse.json(
+          { success: false, message: "Barang fisik tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ success: true, data: JSON.parse(JSON.stringify(item)) });
+    }
+
     const branch = searchParams.get("branch");
     const rack = searchParams.get("rack");
     const status = searchParams.get("status"); // filter by latest contract status
