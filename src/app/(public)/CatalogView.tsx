@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
 import { Status, AuctionItem } from "@prisma/client";
 import { 
@@ -49,6 +49,15 @@ export default function CatalogView({
   const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Pagination states
+  const [loadedItems, setLoadedItems] = useState<AuctionItem[]>(items);
+  const [skip, setSkip] = useState(items.length);
+  const [hasMore, setHasMore] = useState(items.length >= 20);
+  const [loading, setLoading] = useState(false);
+  const isInitialRef = useRef(true);
+
+  const observerRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -65,21 +74,101 @@ export default function CatalogView({
     }
   }, []);
 
-  const displayedItems = useMemo(() => {
-    let filtered = items;
-    if (activeCategory !== "Semua Kategori") {
-      filtered = filtered.filter((item) => item.category === activeCategory);
+  // Reactive search and category refetching
+  useEffect(() => {
+    if (isInitialRef.current) {
+      isInitialRef.current = false;
+      return;
     }
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.title.toLowerCase().includes(query) ||
-          item.sku.toLowerCase().includes(query)
-      );
+
+    let active = true;
+    async function resetAndFetch() {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set("limit", "20");
+        params.set("skip", "0");
+        if (activeCategory !== "Semua Kategori") {
+          params.set("category", activeCategory);
+        }
+        if (searchQuery) {
+          params.set("q", searchQuery);
+        }
+
+        const res = await fetch(`/api/items?${params.toString()}`);
+        const result = await res.json();
+        if (active && result.success) {
+          setLoadedItems(result.data);
+          setSkip(result.data.length);
+          setHasMore(result.hasMore);
+        }
+      } catch (err) {
+        console.error("Error fetching items:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
     }
-    return filtered;
-  }, [items, activeCategory, searchQuery]);
+
+    resetAndFetch();
+    return () => {
+      active = false;
+    };
+  }, [activeCategory, searchQuery]);
+
+  const handleLoadMore = useCallback(async () => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("limit", "20");
+      params.set("skip", skip.toString());
+      if (activeCategory !== "Semua Kategori") {
+        params.set("category", activeCategory);
+      }
+      if (searchQuery) {
+        params.set("q", searchQuery);
+      }
+
+      const res = await fetch(`/api/items?${params.toString()}`);
+      const result = await res.json();
+      if (result.success) {
+        setLoadedItems((prev) => [...prev, ...result.data]);
+        setSkip((prev) => prev + result.data.length);
+        setHasMore(result.hasMore);
+      }
+    } catch (err) {
+      console.error("Error loading more items:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, hasMore, skip, activeCategory, searchQuery]);
+
+  // Intersection Observer for scroll triggers
+  useEffect(() => {
+    if (!hasMore || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerRef.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, loading, handleLoadMore]);
+
+  const displayedItems = loadedItems;
 
   const handleCategoryClick = (category: string) => {
     setActiveCategory(category);
@@ -168,8 +257,8 @@ export default function CatalogView({
               <button
                 key={item.id}
                 onClick={() => { if(!isUnavailable) openModal(item) }}
-                className={`bg-white rounded-xl sm:rounded-2xl overflow-hidden flex flex-col group border relative text-left w-full focus:outline-none ${
-                  isUnavailable ? "grayscale opacity-50 border-slate-200 cursor-not-allowed" : "border-slate-200 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-300"
+                className={`bg-white rounded-xl sm:rounded-2xl overflow-hidden flex flex-col group border relative text-left w-full focus:outline-none content-visibility-card ${
+                  isUnavailable ? "grayscale opacity-50 border-gray-150 shadow-none cursor-not-allowed" : "border-gray-150 shadow-none md:shadow-md md:hover:-translate-y-1 md:hover:shadow-lg transition-all duration-300"
                 }`}
               >
                 <div className="relative aspect-square sm:aspect-[4/3] w-full bg-slate-100 overflow-hidden">
@@ -178,7 +267,7 @@ export default function CatalogView({
                       src={item.images[0]}
                       alt={item.title}
                       fill
-                      sizes="(max-width: 768px) 33vw, (max-width: 1200px) 33vw, 25vw"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className={`object-cover ${!isUnavailable && "group-hover:scale-105 transition-transform duration-500"}`}
                     />
                   ) : (
@@ -207,10 +296,10 @@ export default function CatalogView({
                   {/* Condition Badge */}
                   <div className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 z-10">
                     <span
-                      className={`px-1.5 py-0.5 sm:px-2.5 sm:py-1 flex items-center justify-center rounded-md sm:rounded-lg text-[7px] sm:text-[10px] uppercase font-black shadow-md backdrop-blur-md border border-white/10 ${
+                      className={`px-1.5 py-0.5 sm:px-2.5 sm:py-1 flex items-center justify-center rounded-md sm:rounded-lg text-[7px] sm:text-[10px] uppercase font-black border border-white/10 shadow-none md:shadow-md md:backdrop-blur-md ${
                         conditionLabel === "Baru"
-                          ? "bg-green-500/90 text-white"
-                          : "bg-slate-700/90 text-white"
+                          ? "bg-green-500 text-white"
+                          : "bg-slate-700 text-white"
                       }`}
                     >
                       {conditionLabel}
@@ -251,6 +340,25 @@ export default function CatalogView({
         )}
       </div>
 
+      {/* Intersection Observer Target & Loading State */}
+      {hasMore && (
+        <div ref={observerRef} className="col-span-full flex justify-center py-8">
+          <button
+            onClick={handleLoadMore}
+            disabled={loading}
+            className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold transition-colors disabled:opacity-50 shadow-sm border border-slate-200"
+          >
+            {loading ? "Memuat..." : "Muat Lebih Banyak"}
+          </button>
+        </div>
+      )}
+
+      {loading && !hasMore && (
+        <div className="col-span-full flex justify-center py-8">
+          <div className="text-slate-500 text-sm font-medium">Memuat katalog...</div>
+        </div>
+      )}
+
       {/* Modal / Drawer for Instant Product Details */}
       {selectedItem && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 transition-opacity duration-300">
@@ -276,6 +384,7 @@ export default function CatalogView({
                       src={selectedItem.images[currentImageIndex]} 
                       alt={selectedItem.title}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className="object-contain sm:object-cover"
                     />
                     {selectedItem.images.length > 1 && (

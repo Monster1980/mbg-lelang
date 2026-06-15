@@ -122,7 +122,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
       {/* Mobile Card List (visible only on mobile) */}
       <div className="block md:hidden space-y-3">
         {filteredItems.map((item) => (
-          <div key={item.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+          <div key={item.id} className="bg-white border border-gray-150 rounded-xl p-4 shadow-none md:shadow-md flex flex-col gap-3 content-visibility-card">
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1">
                 <h3 className="font-bold text-slate-900 text-sm line-clamp-2 leading-tight">{item.title}</h3>

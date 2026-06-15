@@ -19,6 +19,7 @@ export default async function PublicHomePage({ searchParams }: Props) {
   const items = await prisma.auctionItem.findMany({
     where,
     orderBy: { createdAt: "desc" },
+    take: 20,
   });
 
   const categories = await prisma.auctionItem.groupBy({

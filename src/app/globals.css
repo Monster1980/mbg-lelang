@@ -36,6 +36,8 @@
 
   --radius-card: 1rem;
   --radius-button: 0.75rem;
+
+  --color-gray-150: #eef0f3;
 }
 
 /* ─── Base Styles ──────────────────────────────────────────────────────────── */
@@ -131,5 +133,10 @@
   @keyframes shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
+  }
+
+  .content-visibility-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 150px;
   }
 }
