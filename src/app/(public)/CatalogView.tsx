@@ -56,6 +56,21 @@ export default function CatalogView({
   const [loading, setLoading] = useState(false);
   const isInitialRef = useRef(true);
 
+  // Client-side cache for query results
+  const cacheRef = useRef<{
+    [key: string]: {
+      data: AuctionItem[];
+      skip: number;
+      hasMore: boolean;
+    };
+  }>({
+    "Semua Kategori::": {
+      data: items,
+      skip: items.length,
+      hasMore: items.length >= 20,
+    },
+  });
+
   const observerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -74,10 +89,20 @@ export default function CatalogView({
     }
   }, []);
 
-  // Reactive search and category refetching
+  // Reactive search and category refetching with caching
   useEffect(() => {
     if (isInitialRef.current) {
       isInitialRef.current = false;
+      return;
+    }
+
+    const cacheKey = `${activeCategory}::${searchQuery}`;
+    if (cacheRef.current[cacheKey]) {
+      // Serve from cache instantly
+      const cached = cacheRef.current[cacheKey];
+      setLoadedItems(cached.data);
+      setSkip(cached.skip);
+      setHasMore(cached.hasMore);
       return;
     }
 
@@ -98,6 +123,13 @@ export default function CatalogView({
         const res = await fetch(`/api/items?${params.toString()}`);
         const result = await res.json();
         if (active && result.success) {
+          // Cache the initial fetched page for this key
+          cacheRef.current[cacheKey] = {
+            data: result.data,
+            skip: result.data.length,
+            hasMore: result.hasMore,
+          };
+
           setLoadedItems(result.data);
           setSkip(result.data.length);
           setHasMore(result.hasMore);
@@ -132,16 +164,28 @@ export default function CatalogView({
       const res = await fetch(`/api/items?${params.toString()}`);
       const result = await res.json();
       if (result.success) {
-        setLoadedItems((prev) => [...prev, ...result.data]);
-        setSkip((prev) => prev + result.data.length);
-        setHasMore(result.hasMore);
+        const cacheKey = `${activeCategory}::${searchQuery}`;
+        const newItems = [...loadedItems, ...result.data];
+        const newSkip = skip + result.data.length;
+        const newHasMore = result.hasMore;
+
+        // Update query cache for this filter
+        cacheRef.current[cacheKey] = {
+          data: newItems,
+          skip: newSkip,
+          hasMore: newHasMore,
+        };
+
+        setLoadedItems(newItems);
+        setSkip(newSkip);
+        setHasMore(newHasMore);
       }
     } catch (err) {
       console.error("Error loading more items:", err);
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, skip, activeCategory, searchQuery]);
+  }, [loading, hasMore, skip, activeCategory, searchQuery, loadedItems]);
 
   // Intersection Observer for scroll triggers
   useEffect(() => {

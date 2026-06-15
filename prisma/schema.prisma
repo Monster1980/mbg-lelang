@@ -67,6 +67,7 @@ model AuctionItem {
 
   @@index([status])
   @@index([branchName])
+  @@index([category])
   @@map("auction_items")
 }
 
