@@ -72,6 +72,7 @@ export default function CatalogView({
   });
 
   const observerRef = useRef<HTMLDivElement | null>(null);
+  const prevCategoryRef = useRef(activeCategory);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -109,6 +110,11 @@ export default function CatalogView({
     let active = true;
     async function resetAndFetch() {
       setLoading(true);
+      if (prevCategoryRef.current !== activeCategory) {
+         setLoadedItems([]); // Clear to show skeleton on category change
+      }
+      prevCategoryRef.current = activeCategory;
+      
       try {
         const params = new URLSearchParams();
         params.set("limit", "20");
@@ -287,9 +293,29 @@ export default function CatalogView({
         </div>
       </div>
 
-      {/* Grid: Extreme Density (3 columns on mobile) */}
-      <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6">
-        {displayedItems.length > 0 ? (
+      {/* Grid: Extreme Density */}
+      <div className="relative">
+        {loading && loadedItems.length > 0 && (
+          <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-start justify-center pt-20 rounded-xl">
+            <div className="w-10 h-10 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin shadow-md"></div>
+          </div>
+        )}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+          {loading && loadedItems.length === 0 ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl sm:rounded-2xl overflow-hidden flex flex-col group border relative text-left w-full animate-pulse border-gray-150">
+                <div className="relative aspect-[4/3] w-full bg-slate-200"></div>
+                <div className="p-2 sm:p-4 flex flex-col flex-grow bg-white space-y-2">
+                  <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                  <div className="mt-auto pt-3">
+                    <div className="h-5 bg-slate-200 rounded w-1/2 mb-2"></div>
+                    <div className="h-3 bg-slate-200 rounded w-2/3"></div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : displayedItems.length > 0 ? (
           displayedItems.map((item) => {
             const isUnavailable = item.status === Status.Terjual || item.status === Status.Dipesan;
             const conditionLabel = item.kondisi;
@@ -305,7 +331,7 @@ export default function CatalogView({
                   isUnavailable ? "grayscale opacity-50 border-gray-150 shadow-none cursor-not-allowed" : "border-gray-150 shadow-none md:shadow-md md:hover:-translate-y-1 md:hover:shadow-lg transition-all duration-300"
                 }`}
               >
-                <div className="relative aspect-square sm:aspect-[4/3] w-full bg-slate-100 overflow-hidden">
+                <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
                   {item.images && item.images[0] ? (
                     <Image
                       src={item.images[0]}
@@ -382,6 +408,7 @@ export default function CatalogView({
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {/* Intersection Observer Target & Loading State */}
@@ -520,7 +547,16 @@ export default function CatalogView({
 
             {/* Sticky Bottom Actions */}
             <div className="absolute sm:relative bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 flex items-center gap-3 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)]">
-               <a 
+              <a 
+                href={`https://maps.google.com/?q=${encodeURIComponent(selectedItem.branchName)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 sm:py-3.5 px-4 rounded-xl font-bold transition-all text-sm sm:text-base border border-slate-200 shadow-sm hover:shadow-md"
+                title="Petunjuk Lokasi"
+              >
+                <MapPin className="w-5 h-5" />
+              </a>
+              <a 
                 href={`https://wa.me/${selectedItem.whatsappNumber.replace(/^0/, '62').replace(/\D/g, '')}?text=${encodeURIComponent(`Halo Admin MBG ${selectedItem.branchName}, saya tertarik dengan barang ini: ${selectedItem.title} (SKU: ${selectedItem.sku})`)}`}
                 target="_blank"
                 rel="noreferrer"

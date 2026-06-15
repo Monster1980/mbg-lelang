@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Status } from "@prisma/client";
 import CatalogView from "./CatalogView";
 
 type Props = {
@@ -14,6 +15,9 @@ export default async function PublicHomePage({ searchParams }: Props) {
       contains: "Pasuruan",
       mode: "insensitive" as const,
     },
+    status: {
+      notIn: [Status.Terjual, Status.Dipesan],
+    },
   };
 
   const items = await prisma.auctionItem.findMany({
@@ -28,6 +32,9 @@ export default async function PublicHomePage({ searchParams }: Props) {
       branchName: {
         contains: "Pasuruan",
         mode: "insensitive" as const,
+      },
+      status: {
+        notIn: [Status.Terjual, Status.Dipesan],
       },
     },
   });

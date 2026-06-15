@@ -68,6 +68,9 @@ export async function GET(request: Request) {
         contains: "Pasuruan",
         mode: "insensitive" as const,
       },
+      status: {
+        notIn: ["Terjual", "Dipesan"],
+      },
     };
 
     if (category && category !== "Semua Kategori") {
