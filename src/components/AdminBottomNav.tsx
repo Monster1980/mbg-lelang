@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, ScanLine, PackageSearch, BarChart3, ScanBarcode, X, Loader2, AlertCircle } from "lucide-react";
+import { LayoutDashboard, ScanLine, PackageSearch, BarChart3, ScanBarcode, X, Loader2, AlertCircle, Warehouse } from "lucide-react";
 
 type CartItem = {
   id: number;
@@ -38,7 +38,7 @@ export default function AdminBottomNav() {
 
   const rightTabs = [
     { name: "POS Kasir", href: "/admin/kasir", icon: ScanLine },
-    { name: "Laporan", href: "/admin/reports", icon: BarChart3 },
+    { name: "Gudang", href: "/admin/gudang", icon: Warehouse },
   ];
 
   const startCamera = useCallback(async () => {

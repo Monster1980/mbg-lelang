@@ -13,6 +13,23 @@ export default async function DetailPage({ params }: Props) {
 
   const item = await prisma.auctionItem.findUnique({
     where: { id: parseInt(id) },
+    select: {
+      id: true,
+      sku: true,
+      branchName: true,
+      title: true,
+      category: true,
+      description: true,
+      defects: true,
+      kondisi: true,
+      price: true,
+      status: true,
+      images: true,
+      whatsappNumber: true,
+      youtubeUrl: true,
+      createdAt: true,
+      // physicalItemId intentionally excluded for public privacy
+    },
   });
 
   if (!item) {
