@@ -120,8 +120,49 @@ export default function RegistrasiGadaiPage() {
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
-          <span className="block sm:inline">Registrasi barang berhasil disimpan!</span>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-2xl max-w-sm w-full mx-auto text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-emerald-50 text-emerald-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg 
+                className="w-8 h-8" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth={3}
+              >
+                <style>
+                  {`
+                    @keyframes drawCheck {
+                      0% { stroke-dasharray: 0, 100; }
+                      100% { stroke-dasharray: 100, 100; }
+                    }
+                    .animate-draw {
+                      animation: drawCheck 0.5s ease-out forwards;
+                    }
+                  `}
+                </style>
+                <path 
+                  className="animate-draw"
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  d="M5 13l4 4L19 7" 
+                  pathLength="100"
+                />
+              </svg>
+            </div>
+            
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Registrasi Berhasil!</h3>
+            <p className="text-sm text-slate-500 mb-6">
+              Data kontrak dan barang gadai baru telah aman tersimpan di sistem.
+            </p>
+            
+            <button
+              onClick={() => setSuccess(false)}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-3 text-sm font-medium transition-all shadow-lg shadow-slate-900/10"
+            >
+              Selesai & Lanjutkan
+            </button>
+          </div>
         </div>
       )}
 
