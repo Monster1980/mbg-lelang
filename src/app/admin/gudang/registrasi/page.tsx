@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
+import DatePicker from "@/components/DatePicker";
 
 export default function RegistrasiGadaiPage() {
   const router = useRouter();
@@ -39,6 +40,10 @@ export default function RegistrasiGadaiPage() {
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleDateChange = (date: string) => {
+    setFormData((prev) => ({ ...prev, startDate: date }));
   };
 
   const formatCurrency = (value: string) => {
@@ -98,8 +103,8 @@ export default function RegistrasiGadaiPage() {
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Registrasi Barang Gadai Baru</h1>
-        <p className="text-gray-500 mt-2">Masukkan detail nasabah dan barang untuk pendaftaran kontrak gadai.</p>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Registrasi Barang Gadai Baru</h1>
+        <p className="text-slate-500 mt-2">Masukkan detail nasabah dan barang untuk pendaftaran kontrak gadai.</p>
       </div>
 
       {error && (
@@ -120,17 +125,17 @@ export default function RegistrasiGadaiPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Section: Identifikasi Kontrak */}
-            <div className="col-span-1 md:col-span-2 border-b border-gray-100 pb-4 mb-2">
-              <h2 className="text-lg font-semibold text-gray-800">Detail Kontrak</h2>
-            </div>
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-6 md:p-8">
+        <form onSubmit={handleSubmit}>
+          
+          {/* Section: Identifikasi Kontrak */}
+          <div className="border-b border-slate-100 pb-3 mb-6">
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-500">Detail Kontrak</h2>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="space-y-2">
-              <label htmlFor="uniqueCode" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="uniqueCode" className="block text-sm font-medium text-slate-700">
                 Kode Unik <span className="text-red-500">*</span>
               </label>
               <input
@@ -141,33 +146,31 @@ export default function RegistrasiGadaiPage() {
                 placeholder="Contoh: 10293481"
                 value={formData.uniqueCode}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
               />
-              <p className="text-xs text-gray-500">Hanya angka diperbolehkan.</p>
+              <p className="text-xs text-slate-500">Hanya angka diperbolehkan.</p>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="startDate" className="block text-sm font-medium text-slate-700">
                 Tanggal Masuk <span className="text-red-500">*</span>
               </label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                required
-                value={formData.startDate}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              <DatePicker 
+                value={formData.startDate} 
+                onChange={handleDateChange} 
+                placeholder="Pilih Tanggal Masuk" 
               />
             </div>
+          </div>
 
-            {/* Section: Identifikasi Nasabah */}
-            <div className="col-span-1 md:col-span-2 border-b border-gray-100 pb-4 mt-4 mb-2">
-              <h2 className="text-lg font-semibold text-gray-800">Data Nasabah</h2>
-            </div>
+          {/* Section: Identifikasi Nasabah */}
+          <div className="border-b border-slate-100 pb-3 mb-6">
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-500">Data Nasabah</h2>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="space-y-2">
-              <label htmlFor="customerName" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="customerName" className="block text-sm font-medium text-slate-700">
                 Nama Nasabah <span className="text-red-500">*</span>
               </label>
               <input
@@ -178,12 +181,12 @@ export default function RegistrasiGadaiPage() {
                 placeholder="Nama Lengkap Nasabah"
                 value={formData.customerName}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="customerPhone" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="customerPhone" className="block text-sm font-medium text-slate-700">
                 No. HP Nasabah <span className="text-red-500">*</span>
               </label>
               <input
@@ -194,17 +197,19 @@ export default function RegistrasiGadaiPage() {
                 placeholder="081234567890"
                 value={formData.customerPhone}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
               />
             </div>
+          </div>
 
-            {/* Section: Detail Barang */}
-            <div className="col-span-1 md:col-span-2 border-b border-gray-100 pb-4 mt-4 mb-2">
-              <h2 className="text-lg font-semibold text-gray-800">Detail Barang Gadai</h2>
-            </div>
+          {/* Section: Detail Barang */}
+          <div className="border-b border-slate-100 pb-3 mb-6">
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-500">Detail Barang Gadai</h2>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="col-span-1 md:col-span-2 space-y-2">
-              <label htmlFor="itemName" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="itemName" className="block text-sm font-medium text-slate-700">
                 Nama Barang <span className="text-red-500">*</span>
               </label>
               <input
@@ -215,12 +220,12 @@ export default function RegistrasiGadaiPage() {
                 placeholder="Contoh: Laptop Asus ROG Strix G15"
                 value={formData.itemName}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div className="col-span-1 md:col-span-2 space-y-2">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="description" className="block text-sm font-medium text-slate-700">
                 Deskripsi Barang <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -231,12 +236,12 @@ export default function RegistrasiGadaiPage() {
                 placeholder="Kondisi, kelengkapan, minus, dsb..."
                 value={formData.description}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
               ></textarea>
             </div>
 
             <div className="col-span-1 md:col-span-2 space-y-2 mt-2">
-              <label htmlFor="loanAmount" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="loanAmount" className="block text-sm font-medium text-slate-700">
                 Jumlah Pinjaman (IDR) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -248,18 +253,17 @@ export default function RegistrasiGadaiPage() {
                   placeholder="Rp 0"
                   value={formData.loanAmount ? formatCurrency(formData.loanAmount) : ""}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 text-lg font-semibold text-blue-900 bg-blue-50 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-2 text-lg font-bold text-slate-900 bg-white border border-slate-200 rounded-lg placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
                 />
               </div>
             </div>
-
           </div>
 
-          <div className="pt-6 border-t border-gray-100 flex justify-end">
+          <div className="pt-6 mt-8 border-t border-slate-100 flex justify-end">
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2.5 mr-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-colors"
+              className="px-6 py-2.5 mr-4 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 transition-colors"
             >
               Batal
             </button>
