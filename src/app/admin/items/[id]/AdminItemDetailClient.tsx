@@ -86,7 +86,15 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
         <div className="md:col-span-1 print:block print:w-full print:m-0">
           <h3 className="text-lg font-semibold text-text-primary mb-4 print:hidden">Stiker Barcode</h3>
           
-          <div className="bg-white text-black p-6 rounded-2xl shadow-xl border border-white/10 relative z-10 mx-auto max-w-[300px] print:absolute print:left-0 print:top-0 print:w-[50mm] print:h-[30mm] print:max-w-[50mm] print:max-h-[30mm] print:flex print:flex-col print:items-center print:justify-center print:p-1 print:m-0 print:rounded-none print:border-none print:shadow-none print:overflow-hidden box-border">
+          {/* 
+            HARDWARE ARCHITECTURE NOTE: Eppos EP9220UB (USB+Bluetooth)
+            - Max Paper Width: 110mm
+            - Thermal Speed: 160mm/s
+            - The `item.sku` used here is raw string format (Code128 compatible), 
+              making it easily translatable into ESC/POS thermal command bytes 
+              for future React Native / Bluetooth mobile print controllers.
+          */}
+          <div className="bg-white text-black p-6 rounded-2xl shadow-xl border border-white/10 relative z-10 mx-auto max-w-[300px] print:absolute print:left-0 print:top-0 print:w-[50mm] print:h-[30mm] print:max-w-full print:max-h-[30mm] print:flex print:flex-col print:items-center print:justify-center print:p-1 print:m-0 print:rounded-none print:border-none print:shadow-none print:overflow-hidden box-border">
             
             <div className="font-black text-xl tracking-tight print:text-[9px] print:leading-tight">MBG LELANG</div>
             <div className="text-[10px] uppercase font-bold mb-3 border-b-2 border-black/20 pb-2 w-full text-center print:hidden">
@@ -141,6 +149,9 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
             margin: 0 !important;
             -webkit-print-color-adjust: exact;
             background-color: white !important;
+            image-rendering: pixelated;
+            -webkit-font-smoothing: none;
+            font-smooth: never;
           }
           body * {
             visibility: hidden;
