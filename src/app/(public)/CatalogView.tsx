@@ -316,7 +316,7 @@ export default function CatalogView({
               </div>
             ))
           ) : displayedItems.length > 0 ? (
-          displayedItems.map((item) => {
+          displayedItems.map((item, index) => {
             const isUnavailable = item.status === Status.Terjual || item.status === Status.Dipesan;
             const conditionLabel = item.kondisi;
             
@@ -339,6 +339,8 @@ export default function CatalogView({
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className={`object-cover ${!isUnavailable && "group-hover:scale-105 transition-transform duration-500"}`}
+                      priority={index === 0 ? true : index < 4}
+                      fetchPriority={index === 0 ? "high" : undefined}
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-[10px] sm:text-sm">

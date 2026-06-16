@@ -47,5 +47,10 @@
     "tailwindcss": "^4.1.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.3"
-  }
+  },
+  "browserslist": [
+    "defaults",
+    "not ie 11",
+    "not ie_mob 11 font"
+  ]
 }

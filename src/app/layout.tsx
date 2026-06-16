@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
+import { Inter } from 'next/font/google';
 import "./globals.css";
+
+const inter = Inter({ 
+  subsets: ['latin'], 
+  display: 'swap',
+  variable: '--font-sans' 
+});
 
 export const metadata: Metadata = {
   title: "PT MBG - Katalog Barang Lelang & Bekas",
@@ -28,19 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="id" className={inter.variable}>
       <body className="flex flex-col min-h-screen">
         {children}
       </body>
