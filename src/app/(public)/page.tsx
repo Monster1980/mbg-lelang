@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { Status } from "@prisma/client";
 import CatalogView from "./CatalogView";
 
+export const revalidate = 60;
+
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
@@ -9,8 +11,10 @@ type Props = {
 export default async function PublicHomePage({ searchParams }: Props) {
   const resolvedParams = await searchParams;
   const branchFilter = resolvedParams.branch as string | undefined;
+  const category = resolvedParams.category as string | undefined;
+  const searchQuery = resolvedParams.q as string | undefined;
 
-  const where = {
+  const where: any = {
     branchName: {
       contains: "Pasuruan",
       mode: "insensitive" as const,
@@ -20,6 +24,18 @@ export default async function PublicHomePage({ searchParams }: Props) {
     },
     isMarketplaceVisible: true,
   };
+
+  if (category && category !== "Semua Kategori") {
+    where.category = category;
+  }
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    where.OR = [
+      { title: { contains: q, mode: "insensitive" } },
+      { sku: { contains: q, mode: "insensitive" } },
+    ];
+  }
 
   const items = await prisma.auctionItem.findMany({
     where,
@@ -68,6 +84,8 @@ export default async function PublicHomePage({ searchParams }: Props) {
         categories={categories}
         branches={branches}
         branchFilter={branchFilter}
+        initialCategory={category || "Semua Kategori"}
+        initialSearchQuery={searchQuery || ""}
       />
     </div>
   );

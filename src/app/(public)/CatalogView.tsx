@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Status, AuctionItem } from "@prisma/client";
 import { 
@@ -25,6 +26,8 @@ type CatalogViewProps = {
   categories: { category: string }[];
   branches: { branchName: string }[];
   branchFilter?: string;
+  initialCategory: string;
+  initialSearchQuery: string;
 };
 
 const getCategoryIcon = (categoryName: string) => {
@@ -43,9 +46,12 @@ export default function CatalogView({
   categories,
   branches,
   branchFilter,
+  initialCategory,
+  initialSearchQuery,
 }: CatalogViewProps) {
-  const [activeCategory, setActiveCategory] = useState("Semua Kategori");
-  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -55,6 +61,18 @@ export default function CatalogView({
   const [hasMore, setHasMore] = useState(items.length >= 20);
   const [loading, setLoading] = useState(false);
   const isInitialRef = useRef(true);
+
+  // Sync state with props
+  useEffect(() => {
+    setActiveCategory(initialCategory);
+    setSearchQuery(initialSearchQuery);
+  }, [initialCategory, initialSearchQuery]);
+
+  useEffect(() => {
+    setLoadedItems(items);
+    setSkip(items.length);
+    setHasMore(items.length >= 20);
+  }, [items]);
 
   // Client-side cache for query results
   const cacheRef = useRef<{
@@ -74,84 +92,7 @@ export default function CatalogView({
   const observerRef = useRef<HTMLDivElement | null>(null);
   const prevCategoryRef = useRef(activeCategory);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      setSearchQuery(params.get("q") || "");
-      setActiveCategory(params.get("category") || "Semua Kategori");
-
-      const handleSearch = (e: Event) => {
-        const customEvent = e as CustomEvent<string>;
-        setSearchQuery(customEvent.detail || "");
-      };
-
-      window.addEventListener("searchChange", handleSearch);
-      return () => window.removeEventListener("searchChange", handleSearch);
-    }
-  }, []);
-
-  // Reactive search and category refetching with caching
-  useEffect(() => {
-    if (isInitialRef.current) {
-      isInitialRef.current = false;
-      return;
-    }
-
-    const cacheKey = `${activeCategory}::${searchQuery}`;
-    if (cacheRef.current[cacheKey]) {
-      // Serve from cache instantly
-      const cached = cacheRef.current[cacheKey];
-      setLoadedItems(cached.data);
-      setSkip(cached.skip);
-      setHasMore(cached.hasMore);
-      return;
-    }
-
-    let active = true;
-    async function resetAndFetch() {
-      setLoading(true);
-      if (prevCategoryRef.current !== activeCategory) {
-         setLoadedItems([]); // Clear to show skeleton on category change
-      }
-      prevCategoryRef.current = activeCategory;
-      
-      try {
-        const params = new URLSearchParams();
-        params.set("limit", "20");
-        params.set("skip", "0");
-        if (activeCategory !== "Semua Kategori") {
-          params.set("category", activeCategory);
-        }
-        if (searchQuery) {
-          params.set("q", searchQuery);
-        }
-
-        const res = await fetch(`/api/items?${params.toString()}`);
-        const result = await res.json();
-        if (active && result.success) {
-          // Cache the initial fetched page for this key
-          cacheRef.current[cacheKey] = {
-            data: result.data,
-            skip: result.data.length,
-            hasMore: result.hasMore,
-          };
-
-          setLoadedItems(result.data);
-          setSkip(result.data.length);
-          setHasMore(result.hasMore);
-        }
-      } catch (err) {
-        console.error("Error fetching items:", err);
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    resetAndFetch();
-    return () => {
-      active = false;
-    };
-  }, [activeCategory, searchQuery]);
+  // Removed client-side filter-fetching useEffect since category and search changes are debounced & processed via Server Component routing.
 
   const handleLoadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -228,8 +169,7 @@ export default function CatalogView({
     } else {
       params.set("category", category);
     }
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
+    router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
   };
 
   const formatIDR = (val: any) => {
@@ -383,7 +323,7 @@ export default function CatalogView({
                   <div className="text-[8px] sm:text-[10px] text-brand-600 font-bold tracking-wider uppercase mb-0.5 sm:mb-1 truncate">
                     {item.category}
                   </div>
-                  <h3 className="font-semibold text-slate-900 leading-snug mb-1 sm:mb-2 line-clamp-2 text-[10px] sm:text-base group-hover:text-brand-600 transition-colors">
+                  <h3 className="font-semibold text-slate-900 leading-snug mb-1 sm:mb-2 line-clamp-2 text-[10px] sm:text-base group-hover:text-brand-600 transition-colors h-8 sm:h-12 overflow-hidden">
                     {item.title}
                   </h3>
                   

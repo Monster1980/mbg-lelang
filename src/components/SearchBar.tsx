@@ -14,29 +14,27 @@ export default function SearchBar() {
     setSearchVal(searchParams.get("q") || "");
   }, [searchParams]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setSearchVal(val);
-
-    // If we're not on the home page, standard push to home page with search query
-    if (pathname !== "/") {
-      router.push(`/?q=${encodeURIComponent(val)}`);
-    } else {
-      // Shallow state update without triggering server fetch
+  // Debounce the router URL synchronization
+  useEffect(() => {
+    const timer = setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
-      if (val) {
-        params.set("q", val);
+      const currentQ = params.get("q") || "";
+      if (searchVal === currentQ) return; // Skip if URL matches state
+
+      if (searchVal) {
+        params.set("q", searchVal);
       } else {
         params.delete("q");
       }
-      const newUrl = `${window.location.pathname}?${params.toString()}`;
-      
-      // Update URL without triggering Next.js routing cycle
-      window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
-      
-      // Dispatch custom event for CatalogView to react to instantly
-      window.dispatchEvent(new CustomEvent("searchChange", { detail: val }));
-    }
+      const newUrl = pathname === "/" ? `?${params.toString()}` : `/?${params.toString()}`;
+      router.replace(newUrl, { scroll: false });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchVal, pathname, router]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchVal(e.target.value);
   };
 
   return (
