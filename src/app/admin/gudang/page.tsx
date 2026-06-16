@@ -91,7 +91,7 @@ export default async function GudangPage() {
         </Link>
 
         <Link
-          href="/admin/gudang/tambah"
+          href="/admin/gudang/registrasi"
           className="group bg-white border border-slate-200 rounded-2xl p-6 hover:border-brand-300 hover:shadow-lg transition-all flex items-start gap-4"
         >
           <div className="p-3 bg-emerald-100 rounded-xl group-hover:bg-emerald-200 transition-colors">
