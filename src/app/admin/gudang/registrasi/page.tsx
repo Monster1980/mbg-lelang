@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 import DatePicker from "@/components/DatePicker";
+import PrintLabelEppos from "@/components/PrintLabelEppos";
 
 export default function RegistrasiGadaiPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function RegistrasiGadaiPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [registeredItem, setRegisteredItem] = useState<any>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -81,7 +83,21 @@ export default function RegistrasiGadaiPage() {
         throw new Error(data.message || "Terjadi kesalahan saat registrasi");
       }
 
+      setRegisteredItem({
+        sku: formData.uniqueCode,
+        title: formData.itemName,
+        branchName: "MBG LELANG", 
+        category: "Gadai",
+        kondisi: "Bekas",
+        price: formData.loanAmount
+      });
       setSuccess(true);
+      
+      // Auto-trigger print dialog after DOM updates
+      setTimeout(() => {
+        window.print();
+      }, 500);
+
       // Reset form but keep startDate and some general structure
       setFormData({
         uniqueCode: "",
@@ -157,7 +173,10 @@ export default function RegistrasiGadaiPage() {
             </p>
             
             <button
-              onClick={() => setSuccess(false)}
+              onClick={() => {
+                setSuccess(false);
+                setRegisteredItem(null);
+              }}
               className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-3 text-sm font-medium transition-all shadow-lg shadow-slate-900/10"
             >
               Selesai & Lanjutkan
@@ -166,7 +185,22 @@ export default function RegistrasiGadaiPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-6 md:p-8">
+      {/* Hidden Print Container for EP9220UB Barcode */}
+      {registeredItem && (
+        <div className="hidden print:block">
+          <PrintLabelEppos
+            branchName={registeredItem.branchName}
+            title={registeredItem.title}
+            category={registeredItem.category}
+            kondisi={registeredItem.kondisi}
+            sku={registeredItem.sku}
+            formattedPrice={registeredItem.price ? formatCurrency(registeredItem.price) : undefined}
+            hideDisclaimer={true}
+          />
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-6 md:p-8 print:hidden">
         <form onSubmit={handleSubmit}>
           
           {/* Section: Identifikasi Kontrak */}

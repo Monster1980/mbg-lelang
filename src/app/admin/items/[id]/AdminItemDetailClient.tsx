@@ -1,8 +1,8 @@
 "use client";
 
-import Barcode from 'react-barcode';
 import { Printer, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
+import PrintLabelEppos from '@/components/PrintLabelEppos';
 
 export default function AdminItemDetailClient({ item, formattedPrice }: { item: any, formattedPrice: string }) {
   
@@ -83,87 +83,18 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
         </div>
 
         {/* Print Area - Barcode Label */}
-        <div className="md:col-span-1 print:block print:w-full print:m-0">
-          <h3 className="text-lg font-semibold text-text-primary mb-4 print:hidden">Stiker Barcode</h3>
-          
-          {/* 
-            HARDWARE ARCHITECTURE NOTE: Eppos EP9220UB (USB+Bluetooth)
-            - Max Paper Width: 110mm
-            - Thermal Speed: 160mm/s
-            - The `item.sku` used here is raw string format (Code128 compatible), 
-              making it easily translatable into ESC/POS thermal command bytes 
-              for future React Native / Bluetooth mobile print controllers.
-          */}
-          <div className="bg-white text-black p-6 rounded-2xl shadow-xl border border-white/10 relative z-10 mx-auto max-w-[300px] print:absolute print:left-0 print:top-0 print:w-[50mm] print:h-[30mm] print:max-w-full print:max-h-[30mm] print:flex print:flex-col print:items-center print:justify-center print:p-1 print:m-0 print:rounded-none print:border-none print:shadow-none print:overflow-hidden box-border">
-            
-            <div className="font-black text-xl tracking-tight print:text-[9px] print:leading-tight">MBG LELANG</div>
-            <div className="text-[10px] uppercase font-bold mb-3 border-b-2 border-black/20 pb-2 w-full text-center print:hidden">
-              {item.branchName}
-            </div>
-            
-            <div className="w-full truncate text-sm font-bold mb-1 px-2 text-center print:text-[8px] print:mb-0.5 print:px-0">
-              {item.title}
-            </div>
-            
-            <div className="flex justify-between w-full px-4 text-xs font-bold mb-2 print:hidden">
-              <span>{item.category}</span>
-              <span>{item.kondisi}</span>
-            </div>
-            
-            <div className="my-2 print:my-0.5 bg-white flex justify-center w-full">
-              <Barcode 
-                value={item.sku} 
-                width={1.5}
-                height={40}
-                displayValue={false}
-                margin={0}
-                background="#ffffff"
-                lineColor="#000000"
-              />
-            </div>
-            
-            <div className="font-mono tracking-wider print:text-[10px] text-sm font-bold text-center print:leading-none">
-              {item.sku}
-            </div>
-
-            <div className="mt-2 text-lg font-black border-t-2 border-black/20 pt-2 w-full text-center print:hidden">
-              {formattedPrice}
-            </div>
-          </div>
-          
-          <p className="text-xs text-text-muted text-center mt-6 print:hidden bg-surface-elevated p-3 rounded-lg border border-white/5">
-            💡 Saat menekan Print, hanya area stiker putih ini yang akan tercetak ke kertas thermal (ukuran 50mm x 30mm).
-          </p>
+        <div className="md:col-span-1">
+          <PrintLabelEppos 
+            branchName={item.branchName}
+            title={item.title}
+            category={item.category}
+            kondisi={item.kondisi}
+            sku={item.sku}
+            formattedPrice={formattedPrice}
+          />
         </div>
 
       </div>
-
-      {/* Global styles for print specifically for this component */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @media print {
-          @page {
-            size: 50mm 30mm;
-            margin: 0 !important;
-          }
-          body {
-            margin: 0 !important;
-            -webkit-print-color-adjust: exact;
-            background-color: white !important;
-            image-rendering: pixelated;
-            -webkit-font-smoothing: none;
-            font-smooth: never;
-          }
-          body * {
-            visibility: hidden;
-          }
-          .print\\:block, .print\\:block * {
-            visibility: visible;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-        }
-      `}} />
     </div>
   );
 }
