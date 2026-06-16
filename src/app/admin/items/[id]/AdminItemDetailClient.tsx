@@ -83,44 +83,48 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
         </div>
 
         {/* Print Area - Barcode Label */}
-        {/* We use a specific print styling to make this look like a thermal sticker */}
         <div className="md:col-span-1 print:block print:w-full print:m-0">
           <h3 className="text-lg font-semibold text-text-primary mb-4 print:hidden">Stiker Barcode</h3>
           
-          <div className="bg-white text-black p-6 rounded-2xl print:p-0 print:rounded-none print:bg-white shadow-xl print:shadow-none flex flex-col items-center text-center mx-auto max-w-[300px] border border-white/10 print:border-none print:overflow-hidden relative z-10">
-            <div className="font-black text-xl mb-1 tracking-tight">PT MBG</div>
-            <div className="text-[10px] uppercase font-bold mb-3 border-b-2 border-black/20 pb-2 w-full">
+          <div className="bg-white text-black p-6 rounded-2xl shadow-xl border border-white/10 relative z-10 mx-auto max-w-[300px] print:absolute print:left-0 print:top-0 print:w-[50mm] print:h-[30mm] print:max-w-[50mm] print:max-h-[30mm] print:flex print:flex-col print:items-center print:justify-center print:p-1 print:m-0 print:rounded-none print:border-none print:shadow-none print:overflow-hidden box-border">
+            
+            <div className="font-black text-xl tracking-tight print:text-[9px] print:leading-tight">MBG LELANG</div>
+            <div className="text-[10px] uppercase font-bold mb-3 border-b-2 border-black/20 pb-2 w-full text-center print:hidden">
               {item.branchName}
             </div>
             
-            <div className="w-full truncate text-sm font-bold mb-1 px-2">
+            <div className="w-full truncate text-sm font-bold mb-1 px-2 text-center print:text-[8px] print:mb-0.5 print:px-0">
               {item.title}
             </div>
             
-            <div className="flex justify-between w-full px-4 text-xs font-bold mb-2">
+            <div className="flex justify-between w-full px-4 text-xs font-bold mb-2 print:hidden">
               <span>{item.category}</span>
               <span>{item.kondisi}</span>
             </div>
             
-            <div className="my-2 bg-white px-2">
+            <div className="my-2 print:my-0.5 bg-white flex justify-center w-full">
               <Barcode 
                 value={item.sku} 
-                width={1.8}
-                height={50}
-                fontSize={14}
+                width={1.5}
+                height={40}
+                displayValue={false}
                 margin={0}
                 background="#ffffff"
                 lineColor="#000000"
               />
             </div>
             
-            <div className="mt-2 text-lg font-black border-t-2 border-black/20 pt-2 w-full">
+            <div className="font-mono tracking-wider print:text-[10px] text-sm font-bold text-center print:leading-none">
+              {item.sku}
+            </div>
+
+            <div className="mt-2 text-lg font-black border-t-2 border-black/20 pt-2 w-full text-center print:hidden">
               {formattedPrice}
             </div>
           </div>
           
           <p className="text-xs text-text-muted text-center mt-6 print:hidden bg-surface-elevated p-3 rounded-lg border border-white/5">
-            💡 Saat menekan Print, hanya area stiker putih ini yang akan tercetak ke kertas thermal (contoh: ukuran 80mm x 50mm).
+            💡 Saat menekan Print, hanya area stiker putih ini yang akan tercetak ke kertas thermal (ukuran 50mm x 30mm).
           </p>
         </div>
 
@@ -129,7 +133,13 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
       {/* Global styles for print specifically for this component */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
+          @page {
+            size: 50mm 30mm;
+            margin: 0 !important;
+          }
           body {
+            margin: 0 !important;
+            -webkit-print-color-adjust: exact;
             background-color: white !important;
           }
           body * {
@@ -138,18 +148,8 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
           .print\\:block, .print\\:block * {
             visibility: visible;
           }
-          .print\\:block {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
           .print\\:hidden {
             display: none !important;
-          }
-          @page {
-            size: 80mm 60mm;
-            margin: 0;
           }
         }
       `}} />
