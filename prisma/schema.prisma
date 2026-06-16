@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────────
+
+enum Kondisi {
+  Baru
+  Bekas
+}
+
+enum Status {
+  Tersedia
+  Dipesan
+  Terjual
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+}
+
+enum PawnStatus {
+  AKTIF
+  DIPERPANJANG
+  LUNAS
+  LELANG
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  nama_lengkap String   @map("nama_lengkap")
+  asal_cabang  String   @map("asal_cabang")
+  role         Role     @default(ADMIN)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+/// Represents a used item listed for sale in the pawnshop catalog.
+/// Items are viewable online but can only be purchased physically at the store.
+model AuctionItem {
+  id              Int      @id @default(autoincrement())
+  sku             String   @unique
+  branchName      String   @map("branch_name")
+  title           String
+  category        String
+  description     String   @db.Text
+  defects         String?  @db.Text
+  kondisi         Kondisi
+  price           Decimal  @db.Decimal(12, 2)
+  status          Status   @default(Tersedia)
+  isMarketplaceVisible Boolean @default(true) @map("is_marketplace_visible")
+  images          String[] // Array of image URLs
+  whatsappNumber  String   @map("whatsapp_number")
+  youtubeUrl      String?  @map("youtube_url")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relation to sales transactions
+  transactions SalesTransaction[]
+
+  // Bridge to warehouse pawn system (nullable — manual items won't have this)
+  physicalItemId String?       @map("physical_item_id")
+  physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
+
+  @@index([status])
+  @@index([branchName])
+  @@index([category])
+  @@map("auction_items")
+}
+
+/// Records completed sales transactions logged by cashiers at the physical store.
+model SalesTransaction {
+  id              Int      @id @default(autoincrement())
+  itemId          Int      @map("item_id")
+  sku             String
+  soldPrice       Decimal  @db.Decimal(12, 2) @map("sold_price")
+  branchName      String   @map("branch_name")
+  cashierName     String   @map("cashier_name")
+  transactionDate DateTime @default(now()) @map("transaction_date")
+
+  // Relation to the auction item
+  item AuctionItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([transactionDate])
+  @@index([branchName])
+  @@index([branchName, transactionDate])
+  @@map("sales_transactions")
+}
+
+// ─── Warehouse Pawn Models ──────────────────────────────────────────────────────
+
+/// Represents a physical item stored in the warehouse with immutable physical properties.
+/// Each physical item can have multiple sequential pawn contracts over its lifetime.
+model PhysicalItem {
+  id           String   @id @default(uuid())
+  itemName     String   @map("item_name")
+  category     String
+  serialNumber String?  @map("serial_number")
+  branchName   String   @map("branch_name")
+  currentRack  String   @map("current_rack")
+  description  String?  @db.Text
+  images       String[]
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contracts    PawnContract[]
+  auctionItems AuctionItem[]
+
+  @@index([branchName])
+  @@index([category])
+  @@map("physical_items")
+}
+
+/// Records each pawn contract cycle for a physical item.
+/// Each renewal/extension generates a new unique code, creating a traceable lineage.
+model PawnContract {
+  id             String       @id @default(uuid())
+  uniqueCode     String       @unique @map("unique_code")
+  status         PawnStatus   @default(AKTIF)
+  customerName   String       @map("customer_name")
+  appraisalValue Decimal      @db.Decimal(12, 2) @map("appraisal_value")
+  physicalItemId String       @map("physical_item_id")
+  physicalItem   PhysicalItem @relation(fields: [physicalItemId], references: [id])
+  notes          String?      @db.Text
+  startDate      DateTime     @default(now()) @map("start_date")
+  endDate        DateTime?    @map("end_date")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([physicalItemId])
+  @@index([status])
+  @@map("pawn_contracts")
+}
