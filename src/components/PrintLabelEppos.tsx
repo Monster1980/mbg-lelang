@@ -10,6 +10,8 @@ export type PrintLabelProps = {
   kondisi: string;
   sku: string;
   formattedPrice?: string;
+  sellingPrice?: number | string;
+  hargaJual?: number | string;
   className?: string;
   hideDisclaimer?: boolean;
 };
@@ -21,9 +23,15 @@ export default function PrintLabelEppos({
   kondisi,
   sku,
   formattedPrice,
+  sellingPrice,
+  hargaJual,
   className = "",
   hideDisclaimer = false,
 }: PrintLabelProps) {
+  const priceVal = sellingPrice !== undefined ? sellingPrice : hargaJual;
+  const parsedPrice = typeof priceVal === "number" ? priceVal : parseFloat(String(priceVal || ""));
+  const hasSellingPrice = !isNaN(parsedPrice) && parsedPrice > 0;
+
   return (
     <div className={`print:block print:w-full print:m-0 ${className}`}>
       {!hideDisclaimer && (
@@ -38,7 +46,7 @@ export default function PrintLabelEppos({
           making it easily translatable into ESC/POS thermal command bytes 
           for future React Native / Bluetooth mobile print controllers.
       */}
-      <div className="bg-white text-black p-6 rounded-2xl shadow-xl border border-slate-200 relative z-10 mx-auto max-w-[300px] print:absolute print:left-0 print:top-0 print:w-[50mm] print:h-[30mm] print:max-w-full print:max-h-[30mm] print:flex print:flex-col print:items-center print:justify-center print:p-1 print:m-0 print:rounded-none print:border-none print:shadow-none print:overflow-hidden box-border">
+      <div className="bg-white text-black p-6 rounded-2xl shadow-xl border border-slate-200 relative z-10 mx-auto max-w-[300px] text-center flex flex-col items-center print:absolute print:left-0 print:top-0 print:w-[50mm] print:h-[30mm] print:max-w-full print:max-h-[30mm] print:flex print:flex-col print:items-center print:justify-center print:text-center print:p-4 print:m-0 print:rounded-none print:border-none print:shadow-none print:overflow-hidden box-border">
         <div className="font-black text-xl tracking-tight print:text-[9px] print:leading-tight">
           MBG LELANG
         </div>
@@ -50,12 +58,19 @@ export default function PrintLabelEppos({
           {title}
         </div>
 
-        <div className="flex justify-between w-full px-4 text-xs font-bold mb-2 print:hidden">
+        <div className="flex justify-between w-full px-4 text-xs font-bold mb-2 print:flex print:justify-center print:gap-1.5 print:px-0 print:text-[7px] print:mb-0.5 print:font-bold">
           <span>{category}</span>
+          <span className="hidden print:inline-block">•</span>
           <span>{kondisi}</span>
         </div>
 
-        <div className="my-2 print:my-0.5 bg-white flex justify-center w-full">
+        {hasSellingPrice && (
+          <div className="text-base font-bold text-black tracking-wide mt-1 print:text-[8px] print:mt-0.5 print:leading-tight">
+            Harga: {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(parsedPrice)}
+          </div>
+        )}
+
+        <div className="my-2 print:my-0.5 bg-white flex justify-center w-full barcode-container">
           <Barcode
             value={sku}
             width={1.5}
@@ -67,15 +82,9 @@ export default function PrintLabelEppos({
           />
         </div>
 
-        <div className="font-mono tracking-wider print:text-[10px] text-sm font-bold text-center print:leading-none">
+        <div className="font-mono tracking-wider print:text-[8px] text-sm font-bold text-center print:leading-none">
           {sku}
         </div>
-
-        {formattedPrice && (
-          <div className="mt-2 text-lg font-black border-t-2 border-black/20 pt-2 w-full text-center print:hidden">
-            {formattedPrice}
-          </div>
-        )}
       </div>
 
       {!hideDisclaimer && (
@@ -90,10 +99,10 @@ export default function PrintLabelEppos({
         @media print {
           @page {
             size: 50mm 30mm;
-            margin: 0 !important;
+            margin: 0;
           }
           body {
-            margin: 0 !important;
+            margin: 0;
             -webkit-print-color-adjust: exact;
             background-color: white !important;
             image-rendering: pixelated;
@@ -108,6 +117,9 @@ export default function PrintLabelEppos({
           }
           .print\\:hidden {
             display: none !important;
+          }
+          .barcode-container svg {
+            height: 30px !important;
           }
         }
       `}} />

@@ -90,7 +90,7 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
             category={item.category}
             kondisi={item.kondisi}
             sku={item.sku}
-            formattedPrice={formattedPrice}
+            sellingPrice={item.price}
           />
         </div>
 

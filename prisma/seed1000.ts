@@ -31,7 +31,7 @@ async function main() {
     
     // Status probability: 60% Tersedia, 15% Dipesan, 25% Terjual
     const statusRand = Math.random();
-    let status = Status.Tersedia;
+    let status: Status = Status.Tersedia;
     if (statusRand > 0.85) status = Status.Dipesan;
     else if (statusRand > 0.60) status = Status.Terjual;
 

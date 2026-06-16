@@ -194,7 +194,6 @@ export default function RegistrasiGadaiPage() {
             category={registeredItem.category}
             kondisi={registeredItem.kondisi}
             sku={registeredItem.sku}
-            formattedPrice={registeredItem.price ? formatCurrency(registeredItem.price) : undefined}
             hideDisclaimer={true}
           />
         </div>
