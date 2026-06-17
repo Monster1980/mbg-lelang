@@ -72,6 +72,7 @@ export default function CatalogView({
     setLoadedItems(items);
     setSkip(items.length);
     setHasMore(items.length >= 20);
+    setLoading(false); // Make sure to turn off loading when new props arrive
   }, [items]);
 
   // Client-side cache for query results
@@ -162,7 +163,15 @@ export default function CatalogView({
   const displayedItems = loadedItems;
 
   const handleCategoryClick = (category: string) => {
+    if (category === activeCategory) return;
+    
+    // Instantly reset states to prevent leaking
     setActiveCategory(category);
+    setLoadedItems([]);
+    setSkip(0);
+    setHasMore(false);
+    setLoading(true);
+    
     const params = new URLSearchParams(window.location.search);
     if (category === "Semua Kategori") {
       params.delete("category");
@@ -240,7 +249,7 @@ export default function CatalogView({
             <div className="w-10 h-10 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin shadow-md"></div>
           </div>
         )}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div key={`${activeCategory}-${searchQuery}`} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {loading && loadedItems.length === 0 ? (
             Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="bg-white rounded-xl sm:rounded-2xl overflow-hidden flex flex-col group border relative text-left w-full animate-pulse border-gray-150">
