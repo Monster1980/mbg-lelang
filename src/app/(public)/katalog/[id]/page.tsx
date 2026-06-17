@@ -4,6 +4,8 @@ import ImageSlider from "./ImageSlider";
 import Link from "next/link";
 import BackButton from "@/components/BackButton";
 
+export const revalidate = 60;
+
 type Props = {
   params: Promise<{ id: string }>;
 };

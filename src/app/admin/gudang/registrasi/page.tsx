@@ -4,7 +4,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 import DatePicker from "@/components/DatePicker";
-import PrintLabelEppos from "@/components/PrintLabelEppos";
+import dynamic from "next/dynamic";
+
+const PrintLabelEppos = dynamic(() => import("@/components/PrintLabelEppos"), { ssr: false });
 
 export default function RegistrasiGadaiPage() {
   const router = useRouter();
