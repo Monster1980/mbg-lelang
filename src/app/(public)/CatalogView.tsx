@@ -212,7 +212,7 @@ export default function CatalogView({
       {/* Filters */}
       <div className="mb-6 space-y-4">
         <div>
-          <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Kategori</h3>
+          <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Kategori</h2>
           <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2 pb-2">
             <button
               onClick={() => handleCategoryClick("Semua Kategori")}
@@ -319,7 +319,7 @@ export default function CatalogView({
                     <span
                       className={`px-1.5 py-0.5 sm:px-2.5 sm:py-1 flex items-center justify-center rounded-md sm:rounded-lg text-[7px] sm:text-[10px] uppercase font-black border border-white/10 shadow-none md:shadow-md md:backdrop-blur-md ${
                         conditionLabel === "Baru"
-                          ? "bg-green-500 text-white"
+                          ? "bg-emerald-700 text-white"
                           : "bg-slate-700 text-white"
                       }`}
                     >
@@ -443,7 +443,7 @@ export default function CatalogView({
               <div className="p-5 sm:p-6 space-y-5">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-black text-white ${selectedItem.kondisi === 'Baru' ? 'bg-green-500' : 'bg-slate-700'}`}>
+                    <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-black text-white ${selectedItem.kondisi === 'Baru' ? 'bg-emerald-700' : 'bg-slate-700'}`}>
                       {selectedItem.kondisi === 'Baru' ? 'Baru' : 'Bekas'}
                     </span>
                     <span className="px-2.5 py-1 rounded-md text-[10px] uppercase font-black bg-brand-100 text-brand-700">
