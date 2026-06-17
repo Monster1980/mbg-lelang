@@ -64,7 +64,7 @@ export default function PrintLabelEppos({
 
           {/* PRICE DISPLAY */}
           {hasSellingPrice && (
-            <div className="text-xl font-black mt-2 tracking-wide">
+            <div className="text-3xl md:text-4xl font-black text-black border-2 border-dashed border-black py-2 px-4 my-2 block tracking-wider">
               {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(parsedPrice)}
             </div>
           )}

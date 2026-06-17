@@ -84,6 +84,7 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
   const [lastTx, setLastTx] = useState<LastTx | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [scanCooldown, setScanCooldown] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<any>(null);
@@ -165,23 +166,25 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
   }, []);
 
   const handleDecodedScan = useCallback((sku: string) => {
-    if (scanCooldown) return;
+    if (scanCooldown || isProcessing) return;
     
     setScanCooldown(true);
     cooldownRef.current = setTimeout(() => setScanCooldown(false), 1500);
     
     lookupAndAddToCart(sku.trim());
-  }, [scanCooldown]);
+  }, [scanCooldown, isProcessing]);
 
   // ─── SKU Lookup ───────────────────────────────────────────────────────────
 
   const lookupAndAddToCart = async (sku: string) => {
-    if (!sku) return;
+    if (!sku || isProcessing) return;
+    setIsProcessing(true);
     
     // Check if already in cart
     if (cartItems.some((item) => item.sku === sku)) {
       setError(`Barang ${sku} sudah ada di keranjang.`);
       playBeep(false);
+      setTimeout(() => setIsProcessing(false), 1500);
       return;
     }
 
@@ -216,16 +219,20 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
       }
     } catch (err) {
       setError("Kesalahan jaringan saat mencari barang.");
+      playBeep(false);
     } finally {
       setLoading(false);
       setSkuInput("");
       if (inputRef.current) inputRef.current.focus();
+      
+      // Force a minimum 1.5-second cooldown delay before resetting the lock
+      setTimeout(() => setIsProcessing(false), 1500);
     }
   };
 
   const handleManualScan = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!skuInput.trim()) return;
+    if (!skuInput.trim() || isProcessing) return;
     lookupAndAddToCart(skuInput.trim());
   };
 

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ExternalLink, Printer, PackageSearch, Search } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 
 type Item = {
   id: number;
@@ -15,6 +17,29 @@ type Item = {
 
 export default function ItemsTableClient({ items }: { items: Item[] }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+    
+    // Subscribe directly to table changes on the auction_items table
+    // When Cashier A processes a sale, the stock quantity/status drops on Cashier B's screen in real-time
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'auction_items' },
+        (payload) => {
+          // Instantly force state dispatch update by refreshing the router (since this is App Router)
+          router.refresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [router]);
 
   const formatIDR = (val: any) => {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(val));
