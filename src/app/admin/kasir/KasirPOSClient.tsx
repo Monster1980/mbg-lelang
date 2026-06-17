@@ -16,6 +16,7 @@ import {
   MapPin,
 } from "lucide-react";
 import Image from "next/image";
+import { createClient } from "@/utils/supabase/client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,36 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
     return () => {
       stopCamera();
       if (cooldownRef.current) clearTimeout(cooldownRef.current);
+    };
+  }, []);
+
+  // ─── Supabase Realtime Stock Sync ──────────────────────────────────────────
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel('realtime-stock-sync')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'auction_items' },
+        (payload) => {
+          console.log('Auction item stock updated:', payload.new);
+          // If the item just sold, and it's in our cart, warn the cashier
+          const updatedItem = payload.new as any;
+          if (updatedItem.status === 'Terjual') {
+            setCartItems((prev) => {
+              if (prev.some(item => item.sku === updatedItem.sku)) {
+                setError(\`Peringatan: Barang \${updatedItem.sku} baru saja terjual di kasir lain!\`);
+                playBeep(false);
+              }
+              return prev;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
   }, []);
 
