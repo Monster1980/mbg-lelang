@@ -46,50 +46,50 @@ export default function PrintLabelEppos({
           making it easily translatable into ESC/POS thermal command bytes 
           for future React Native / Bluetooth mobile print controllers.
       */}
-      <div className="bg-white text-black p-6 rounded-2xl shadow-xl border border-slate-200 relative z-10 mx-auto max-w-[300px] text-center flex flex-col items-center print:absolute print:left-0 print:top-0 print:w-[50mm] print:h-[30mm] print:max-w-full print:max-h-[30mm] print:flex print:flex-col print:items-center print:justify-center print:text-center print:p-4 print:m-0 print:rounded-none print:border-none print:shadow-none print:overflow-hidden box-border">
-        <div className="font-black text-xl tracking-tight print:text-[9px] print:leading-tight">
-          MBG LELANG
-        </div>
-        <div className="text-[10px] uppercase font-bold mb-3 border-b-2 border-black/20 pb-2 w-full text-center print:hidden">
-          {branchName}
-        </div>
-
-        <div className="w-full truncate text-sm font-bold mb-1 px-2 text-center print:text-[8px] print:mb-0.5 print:px-0">
-          {title}
+      <div className="flex flex-col items-center justify-between p-6 bg-white text-black box-border overflow-hidden rounded-2xl shadow-xl border border-slate-200 relative z-10 mx-auto max-w-[300px] text-center print:absolute print:left-0 print:top-0 print:w-[80mm] print:h-[100mm] print:max-w-[80mm] print:max-h-[100mm] print:p-6 print:m-0 print:rounded-none print:border-none print:shadow-none">
+        
+        {/* HEADER */}
+        <div className="text-lg font-bold tracking-wider border-b-2 border-black pb-2 w-full text-center uppercase">
+          PT MBG - {branchName}
         </div>
 
-        <div className="flex justify-between w-full px-4 text-xs font-bold mb-2 print:flex print:justify-center print:gap-1.5 print:px-0 print:text-[7px] print:mb-0.5 print:font-bold">
-          <span>{category}</span>
-          <span className="hidden print:inline-block">•</span>
-          <span>{kondisi}</span>
-        </div>
-
-        {hasSellingPrice && (
-          <div className="text-base font-bold text-black tracking-wide mt-1 print:text-[8px] print:mt-0.5 print:leading-tight">
-            Harga: {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(parsedPrice)}
+        {/* BODY CONTENT */}
+        <div className="flex flex-col items-center w-full">
+          <div className="text-base font-semibold mt-4 text-center w-full break-words">
+            {title}
           </div>
-        )}
+          <div className="text-sm text-slate-700 mt-1">
+            {category} • {kondisi}
+          </div>
 
-        <div className="my-2 print:my-0.5 bg-white flex justify-center w-full barcode-container">
+          {/* PRICE DISPLAY */}
+          {hasSellingPrice && (
+            <div className="text-xl font-black mt-2 tracking-wide">
+              {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(parsedPrice)}
+            </div>
+          )}
+        </div>
+
+        {/* BARCODE ENGINE */}
+        <div className="mt-auto flex flex-col items-center w-full barcode-container pt-4">
           <Barcode
             value={sku}
-            width={1.5}
-            height={40}
+            width={2.5}
+            height={70}
             displayValue={false}
             margin={0}
             background="#ffffff"
             lineColor="#000000"
           />
-        </div>
-
-        <div className="font-mono tracking-wider print:text-[8px] text-sm font-bold text-center print:leading-none">
-          {sku}
+          <div className="font-mono tracking-wider text-sm font-bold text-center mt-2">
+            {sku}
+          </div>
         </div>
       </div>
 
       {!hideDisclaimer && (
         <p className="text-xs text-slate-500 text-center mt-6 print:hidden bg-slate-50 p-3 rounded-lg border border-slate-100">
-          💡 Saat menekan Print, hanya area stiker putih ini yang akan tercetak ke kertas thermal (ukuran 50mm x 30mm).
+          💡 Saat menekan Print, hanya area stiker putih ini yang akan tercetak ke kertas thermal (ukuran 80mm x 100mm).
         </p>
       )}
 
@@ -98,11 +98,11 @@ export default function PrintLabelEppos({
         __html: `
         @media print {
           @page {
-            size: 50mm 30mm;
-            margin: 0;
+            size: 80mm 100mm;
+            margin: 0mm !important; /* This strips browser headers/footers completely */
           }
           body {
-            margin: 0;
+            margin: 0 !important;
             -webkit-print-color-adjust: exact;
             background-color: white !important;
             image-rendering: pixelated;
@@ -117,9 +117,6 @@ export default function PrintLabelEppos({
           }
           .print\\:hidden {
             display: none !important;
-          }
-          .barcode-container svg {
-            height: 30px !important;
           }
         }
       `}} />
