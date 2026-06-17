@@ -134,7 +134,7 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
           if (updatedItem.status === 'Terjual') {
             setCartItems((prev) => {
               if (prev.some(item => item.sku === updatedItem.sku)) {
-                setError(\`Peringatan: Barang \${updatedItem.sku} baru saja terjual di kasir lain!\`);
+                setError(`Peringatan: Barang ${updatedItem.sku} baru saja terjual di kasir lain!`);
                 playBeep(false);
               }
               return prev;
