@@ -31,7 +31,9 @@ export default function AdminSidebar({ role, userBranch }: { role: Role, userBra
     <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col fixed inset-y-0 z-10">
       <div className="h-16 flex flex-col justify-center px-6 border-b border-slate-200">
         <span className="text-xl font-black text-brand-700 tracking-tight leading-none">MBG Admin</span>
-        <span className="text-[10px] text-slate-500 font-bold uppercase mt-1">{userBranch}</span>
+        <span className="text-[10px] text-slate-500 font-bold uppercase mt-1">
+          {userBranch && userBranch.toLowerCase().includes("pasuruan") ? "MBG CABANG PASURUAN - SANGAR" : userBranch?.toUpperCase()}
+        </span>
       </div>
       
       <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">

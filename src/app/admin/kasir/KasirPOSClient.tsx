@@ -77,6 +77,13 @@ function clearCartStorage() {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function KasirPOSClient({ cashierName, branchName }: Props) {
+  const formatBranchName = (name: string) => {
+    if (name && name.toLowerCase().includes("pasuruan")) {
+      return "Cabang Pasuruan - Sangar";
+    }
+    return name;
+  };
+
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [skuInput, setSkuInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -439,7 +446,7 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
                   </p>
                   <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                     <MapPin className="w-3 h-3" />
-                    {branchName}
+                    {formatBranchName(branchName)}
                   </p>
                 </div>
               </div>
@@ -700,7 +707,7 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
         <div className="hidden print:block text-black bg-white w-full max-w-[80mm] mx-auto p-4 text-sm font-mono absolute top-0 left-0">
           <div className="text-center mb-4">
             <h1 className="font-black text-2xl tracking-tight">PT MBG</h1>
-            <p className="font-bold text-xs">{lastTx.branchName}</p>
+            <p className="font-bold text-xs">{formatBranchName(lastTx.branchName)}</p>
             <p className="text-[10px] mt-1">Katalog Lelang &amp; Bekas</p>
           </div>
 

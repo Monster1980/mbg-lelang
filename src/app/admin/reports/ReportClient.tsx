@@ -20,6 +20,13 @@ const parseLocalDate = (dateStr: string): Date | null => {
   return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
 };
 
+const formatBranchName = (name: string) => {
+  if (name && name.toLowerCase().includes("pasuruan")) {
+    return "Cabang Pasuruan - Sangar";
+  }
+  return name;
+};
+
 type Transaction = {
   id: number;
   sku: string;
@@ -151,7 +158,7 @@ export default function ReportClient({
           <Filter className="w-4 h-4" /> Filter Laporan
         </h3>
         <div className="flex flex-wrap items-end gap-4">
-          <div>
+          <div className="hidden">
             <label className="block text-xs text-slate-600 mb-1 font-medium">Cabang</label>
             <select
               disabled={!isSuperAdmin}
@@ -236,7 +243,7 @@ export default function ReportClient({
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-slate-900 font-medium">{tx.branchName}</div>
+                    <div className="text-slate-900 font-medium">{formatBranchName(tx.branchName)}</div>
                     <div className="text-xs text-slate-500">Kasir: {tx.cashierName}</div>
                   </td>
                   <td className="px-6 py-4 text-right font-bold text-slate-900">{formatIDR(tx.soldPrice)}</td>
@@ -273,7 +280,7 @@ export default function ReportClient({
               </div>
             </div>
             <div className="pt-2 border-t border-slate-50 text-[11px] flex justify-between text-slate-600">
-              <span className="truncate pr-2">{tx.branchName}</span>
+              <span className="truncate pr-2">{formatBranchName(tx.branchName)}</span>
               <span className="font-medium whitespace-nowrap shrink-0">Kasir: {tx.cashierName}</span>
             </div>
           </div>

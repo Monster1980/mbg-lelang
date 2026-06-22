@@ -71,7 +71,10 @@ export async function GET(request: Request) {
     }
 
     const where = {
-      ...(branchNameFilter ? { branchName: branchNameFilter } : {}),
+      branchName: {
+        contains: "Pasuruan",
+        mode: "insensitive" as const,
+      },
       ...dateFilter,
     };
 

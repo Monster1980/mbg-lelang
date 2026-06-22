@@ -63,14 +63,14 @@ export async function POST(request: Request) {
     if (action === "CREATE_NEW") {
       const { itemName, category, serialNumber, description, uniqueCode, customerName, customerPhone, appraisalValue, pawnEnteredAt, dueDate } = body;
       
-      const branchName = "Cabang Pasuruan Sangar"; // Enforced default
+      const branchName = "Cabang Pasuruan - Sangar"; // Enforced default
       const currentRack = ""; // Deprecated
 
       const startDate = pawnEnteredAt ? new Date(pawnEnteredAt) : new Date();
       const endDate = dueDate ? new Date(dueDate) : new Date(startDate);
       if (!dueDate) {
         if (category === "ELEKTRONIK") endDate.setMonth(endDate.getMonth() + 1);
-        else if (category === "GERABAHAN" || category === "EMAS") endDate.setMonth(endDate.getMonth() + 4);
+        else if (category === "GERABAHAN") endDate.setMonth(endDate.getMonth() + 4);
         else if (category === "KENDARAAN") endDate.setMonth(endDate.getMonth() + 2);
         else endDate.setMonth(endDate.getMonth() + 1);
       }
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
       const endDate = new Date(startDate);
       if (oldContract.physicalItem.category === "ELEKTRONIK") {
         endDate.setMonth(endDate.getMonth() + 1);
-      } else if (oldContract.physicalItem.category === "GERABAHAN" || oldContract.physicalItem.category === "EMAS") {
+      } else if (oldContract.physicalItem.category === "GERABAHAN") {
         endDate.setMonth(endDate.getMonth() + 4);
       } else if (oldContract.physicalItem.category === "KENDARAAN") {
         endDate.setMonth(endDate.getMonth() + 2);

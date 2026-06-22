@@ -28,7 +28,7 @@ function AddItemForm() {
   const [formData, setFormData] = useState({
     sku: "",
     title: "",
-    branchName: "MBG Cabang Pasuruan",
+    branchName: "Cabang Pasuruan - Sangar",
     category: "Elektronik",
     price: "",
     kondisi: "Baru",
@@ -264,10 +264,8 @@ function AddItemForm() {
                   className={inputClassName}
                 >
                   <option>Elektronik</option>
-                  <option>Fashion</option>
-                  <option>Perhiasan</option>
-                  <option>Jam Tangan</option>
-                  <option>Lainnya</option>
+                  <option>Gerabahan</option>
+                  <option>Kendaraan</option>
                 </select>
               )}
             </div>

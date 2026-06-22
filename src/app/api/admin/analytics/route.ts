@@ -66,7 +66,13 @@ export async function GET(request: Request) {
 
     // 1. Fetch current active stock items (Tersedia)
     const totalActive = await prisma.auctionItem.count({
-      where: { status: Status.Tersedia }
+      where: {
+        status: Status.Tersedia,
+        branchName: {
+          contains: "Pasuruan",
+          mode: "insensitive" as const
+        }
+      }
     });
 
     const dateFilter = start && end ? {
@@ -78,7 +84,13 @@ export async function GET(request: Request) {
 
     // 2. Fetch sales transactions in date range
     const sales = await prisma.salesTransaction.findMany({
-      where: dateFilter,
+      where: {
+        branchName: {
+          contains: "Pasuruan",
+          mode: "insensitive" as const
+        },
+        ...dateFilter
+      },
       include: {
         item: {
           select: {

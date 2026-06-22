@@ -85,6 +85,13 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
     return Number(value.replace(/\./g, "")) || 0;
   };
 
+  const formatBranchName = (name: string) => {
+    if (name && name.toLowerCase().includes("pasuruan")) {
+      return "Cabang Pasuruan - Sangar";
+    }
+    return name;
+  };
+
   // 1. Filter by search
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
@@ -405,7 +412,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                       )}
                     </div>
                     <div className="text-xs text-slate-500 mt-1">
-                      {item.branchName}
+                      {formatBranchName(item.branchName)}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-slate-900 font-medium">
@@ -522,7 +529,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                   SKU: {item.sku}
                 </p>
                 <p className="text-[10px] text-slate-400 mt-0.5">
-                  {item.branchName}
+                  {formatBranchName(item.branchName)}
                 </p>
               </div>
               <div className="text-right">

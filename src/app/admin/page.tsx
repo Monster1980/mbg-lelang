@@ -50,9 +50,21 @@ async function DashboardData() {
   // Parallelize queries to eliminate sequential blocking and reduce TTFB latency
   const [totalActive, sales] = await Promise.all([
     prisma.auctionItem.count({
-      where: { status: Status.Tersedia }
+      where: {
+        status: Status.Tersedia,
+        branchName: {
+          contains: "Pasuruan",
+          mode: "insensitive" as const
+        }
+      }
     }),
     prisma.salesTransaction.findMany({
+      where: {
+        branchName: {
+          contains: "Pasuruan",
+          mode: "insensitive" as const
+        }
+      },
       include: {
         item: {
           select: {

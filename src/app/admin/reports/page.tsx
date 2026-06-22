@@ -65,7 +65,10 @@ export default async function SalesReportPage({
   }
 
   const where = {
-    ...(branchNameFilter ? { branchName: branchNameFilter } : {}),
+    branchName: {
+      contains: "Pasuruan",
+      mode: "insensitive" as const,
+    },
     ...dateFilter
   };
 

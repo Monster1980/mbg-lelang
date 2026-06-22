@@ -35,10 +35,7 @@ const getCategoryIcon = (categoryName: string) => {
   const name = categoryName.toLowerCase();
   if (name.includes("semua")) return <LayoutGrid className="w-4 h-4" />;
   if (name.includes("elektronik") || name.includes("hp") || name.includes("laptop")) return <Laptop className="w-4 h-4" />;
-  if (name.includes("perhiasan") || name.includes("emas")) return <Gem className="w-4 h-4" />;
-  if (name.includes("otomotif") || name.includes("motor") || name.includes("mobil")) return <Car className="w-4 h-4" />;
-  if (name.includes("jam")) return <Watch className="w-4 h-4" />;
-  if (name.includes("fashion") || name.includes("baju") || name.includes("sepatu")) return <Shirt className="w-4 h-4" />;
+  if (name.includes("otomotif") || name.includes("motor") || name.includes("mobil") || name.includes("kendaraan")) return <Car className="w-4 h-4" />;
   return <Package className="w-4 h-4" />;
 };
 
@@ -226,20 +223,23 @@ export default function CatalogView({
             >
               {getCategoryIcon("Semua Kategori")} <span className="truncate">Semua</span>
             </button>
-            {categories.map((c) => (
-              <button
-                key={c.category}
-                onClick={() => handleCategoryClick(c.category)}
-                className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-2 w-full rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
-                  activeCategory === c.category
-                    ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
-                    : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
-                }`}
-                title={c.category}
-              >
-                {getCategoryIcon(c.category)} <span className="truncate">{c.category}</span>
-              </button>
-            ))}
+            {["Elektronik", "Gerabahan", "Kendaraan"].map((catName) => {
+              const matchedDbCat = categories.find(c => c.category.toLowerCase() === catName.toLowerCase())?.category || catName;
+              return (
+                <button
+                  key={catName}
+                  onClick={() => handleCategoryClick(matchedDbCat)}
+                  className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-2 w-full rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                    activeCategory.toLowerCase() === matchedDbCat.toLowerCase()
+                      ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
+                      : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
+                  }`}
+                  title={catName}
+                >
+                  {getCategoryIcon(catName)} <span className="truncate">{catName}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

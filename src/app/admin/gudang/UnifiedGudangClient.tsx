@@ -103,7 +103,7 @@ export default function UnifiedGudangClient({ dashboardData, lifecycleCounts, ca
     
     if (formBaru.category === "ELEKTRONIK") {
       date.setMonth(date.getMonth() + 1);
-    } else if (formBaru.category === "GERABAHAN" || formBaru.category === "EMAS") {
+    } else if (formBaru.category === "GERABAHAN") {
       date.setMonth(date.getMonth() + 4);
     } else if (formBaru.category === "KENDARAAN") {
       date.setMonth(date.getMonth() + 2);
@@ -554,7 +554,6 @@ export default function UnifiedGudangClient({ dashboardData, lifecycleCounts, ca
                       >
                         <option value="ELEKTRONIK">ELEKTRONIK (+1 Bulan Jatuh Tempo)</option>
                         <option value="GERABAHAN">GERABAHAN (+4 Bulan Jatuh Tempo)</option>
-                        <option value="EMAS">EMAS (+4 Bulan Jatuh Tempo)</option>
                         <option value="KENDARAAN">KENDARAAN (+2 Bulan Jatuh Tempo)</option>
                       </select>
                       <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500">
@@ -629,7 +628,7 @@ export default function UnifiedGudangClient({ dashboardData, lifecycleCounts, ca
                       Nama Cabang <Lock size={14} className="text-slate-400"/>
                     </label>
                     <div className="w-full border border-slate-200 bg-slate-50 text-slate-500 p-3.5 rounded-lg font-medium flex items-center h-[52px]">
-                      Cabang Pasuruan Sangar
+                      Cabang Pasuruan - Sangar
                     </div>
                   </div>
 
@@ -1003,7 +1002,11 @@ export default function UnifiedGudangClient({ dashboardData, lifecycleCounts, ca
 
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 col-span-2">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Cabang</p>
-                <p className="font-semibold text-slate-800 mt-0.5">{detailTarget.physicalItem?.branchName || "Cabang Pasuruan Sangar"}</p>
+                <p className="font-semibold text-slate-800 mt-0.5">
+                  {detailTarget.physicalItem?.branchName && detailTarget.physicalItem.branchName.includes("Pasuruan")
+                    ? "Cabang Pasuruan - Sangar"
+                    : (detailTarget.physicalItem?.branchName || "Cabang Pasuruan - Sangar")}
+                </p>
               </div>
             </div>
 

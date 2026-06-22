@@ -32,6 +32,10 @@ export default function PrintLabelEppos({
   const parsedPrice = typeof priceVal === "number" ? priceVal : parseFloat(String(priceVal || ""));
   const hasSellingPrice = !isNaN(parsedPrice) && parsedPrice > 0;
 
+  const displayBranch = branchName && branchName.toLowerCase().includes("pasuruan") 
+    ? "Cabang Pasuruan - Sangar" 
+    : branchName;
+
   return (
     <div className={`print:block print:w-full print:m-0 ${className}`}>
       {!hideDisclaimer && (
@@ -50,7 +54,7 @@ export default function PrintLabelEppos({
         
         {/* HEADER */}
         <div className="text-lg font-bold tracking-wide border-b-2 border-black pb-2 w-full text-center uppercase print:text-base print:leading-tight">
-          PT MBG - {branchName}
+          PT MBG - {displayBranch}
         </div>
 
         {/* BODY CONTENT */}
