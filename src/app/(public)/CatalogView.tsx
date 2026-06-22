@@ -4,7 +4,6 @@ import { Status, AuctionItem } from '@prisma/client';
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { createClient } from "@/utils/supabase/client";
 
 import { 
   LayoutGrid, 
@@ -63,191 +62,7 @@ export default function CatalogView({
   const [hasMore, setHasMore] = useState(items.length >= 20);
   const [loading, setLoading] = useState(false);
   const isInitialRef = useRef(true);
-  const [removingIds, setRemovingIds] = useState<Set<number>>(new Set());
-  const [fadingInIds, setFadingInIds] = useState<Set<number>>(new Set());
 
-  // Map raw Supabase DB payload (snake_case) to Prisma AuctionItem (camelCase)
-  const mapDbRecordToItem = (rec: any): AuctionItem => ({
-    id: rec.id,
-    sku: rec.sku,
-    title: rec.title,
-    category: rec.category,
-    description: rec.description,
-    defects: rec.defects ?? null,
-    price: rec.price,
-    status: rec.status,
-    kondisi: rec.kondisi,
-    images: rec.images ?? [],
-    branchName: rec.branch_name,
-    whatsappNumber: rec.whatsapp_number,
-    youtubeUrl: rec.youtube_url ?? null,
-    createdAt: rec.created_at ? new Date(rec.created_at) : new Date(),
-    physicalItemId: rec.physical_item_id ?? null,
-    isMarketplaceVisible: rec.is_marketplace_visible ?? true,
-  });
-
-  // ──── Supabase Realtime: Live catalog sync ────
-  useEffect(() => {
-    const supabase = createClient();
-
-    const isItemMatchingFilters = (rec: any) => {
-      // 1. Branch filter: contains "Pasuruan"
-      const branchName = rec.branch_name || "";
-      if (!branchName.toLowerCase().includes("pasuruan")) {
-        return false;
-      }
-
-      // 2. Marketplace visible & status check
-      if (rec.is_marketplace_visible === false || rec.status !== "Tersedia") {
-        return false;
-      }
-
-      // 3. Category match
-      if (activeCategory && activeCategory !== "Semua Kategori") {
-        if (activeCategory.toLowerCase() !== (rec.category || "").toLowerCase()) {
-          return false;
-        }
-      }
-
-      // 4. Search query match
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const title = (rec.title || "").toLowerCase();
-        const sku = (rec.sku || "").toLowerCase();
-        if (!title.includes(q) && !sku.includes(q)) {
-          return false;
-        }
-      }
-
-      return true;
-    };
-
-    const channel = supabase
-      .channel('public-catalog-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'auction_items' },
-        (payload) => {
-          const { eventType, old: oldRecord, new: newRecord } = payload;
-
-          if (eventType === 'DELETE' && oldRecord?.id) {
-            // Fade out then remove
-            const deletedId = oldRecord.id as number;
-            setRemovingIds((prev) => new Set(prev).add(deletedId));
-            setTimeout(() => {
-              setLoadedItems((prev) => prev.filter((item) => item.id !== deletedId));
-              setRemovingIds((prev) => {
-                const next = new Set(prev);
-                next.delete(deletedId);
-                return next;
-              });
-              setSelectedItem((current) => (current?.id === deletedId ? null : current));
-            }, 400);
-          }
-
-          if (eventType === 'UPDATE' && newRecord) {
-            const updatedId = newRecord.id as number;
-            const isVisible = newRecord.is_marketplace_visible !== false;
-            const isSold = newRecord.status === 'Terjual';
-
-            if (!isVisible || isSold) {
-              // Item hidden or sold — fade out and remove from public view
-              setRemovingIds((prev) => new Set(prev).add(updatedId));
-              setTimeout(() => {
-                setLoadedItems((prev) => prev.filter((item) => item.id !== updatedId));
-                setRemovingIds((prev) => {
-                  const next = new Set(prev);
-                  next.delete(updatedId);
-                  return next;
-                });
-                setSelectedItem((current) => (current?.id === updatedId ? null : current));
-              }, 400);
-            } else {
-              // Item is visible and not sold — check if it's an UNHIDE or a field edit
-              setLoadedItems((prev) => {
-                const existsIdx = prev.findIndex((item) => item.id === updatedId);
-
-                if (existsIdx >= 0) {
-                  if (!isItemMatchingFilters(newRecord)) {
-                    // It was in state, but no longer matches filters (e.g. category changed) — remove it
-                    return prev.filter((item) => item.id !== updatedId);
-                  }
-                  // Item exists — update in place (price/title/etc edit)
-                  const updated = [...prev];
-                  updated[existsIdx] = {
-                    ...updated[existsIdx],
-                    title: newRecord.title ?? updated[existsIdx].title,
-                    price: newRecord.price ?? updated[existsIdx].price,
-                    status: newRecord.status ?? updated[existsIdx].status,
-                    category: newRecord.category ?? updated[existsIdx].category,
-                    description: newRecord.description ?? updated[existsIdx].description,
-                    defects: newRecord.defects ?? updated[existsIdx].defects,
-                    images: newRecord.images ?? updated[existsIdx].images,
-                  };
-                  return updated;
-                }
-
-                // Item NOT in state — this is an UNHIDE event, inject it back if it matches filters
-                if (isItemMatchingFilters(newRecord)) {
-                  const restoredItem = mapDbRecordToItem(newRecord);
-                  // Trigger fade-in animation
-                  setFadingInIds((ids) => new Set(ids).add(updatedId));
-                  setTimeout(() => {
-                    setFadingInIds((ids) => {
-                      const next = new Set(ids);
-                      next.delete(updatedId);
-                      return next;
-                    });
-                  }, 2500);
-                  return [restoredItem, ...prev];
-                }
-
-                return prev;
-              });
-
-              // Also update modal if open
-              setSelectedItem((current) => {
-                if (current?.id !== updatedId) return current;
-                return {
-                  ...current,
-                  title: newRecord.title ?? current.title,
-                  price: newRecord.price ?? current.price,
-                  status: newRecord.status ?? current.status,
-                  category: newRecord.category ?? current.category,
-                  description: newRecord.description ?? current.description,
-                  defects: newRecord.defects ?? current.defects,
-                  images: newRecord.images ?? current.images,
-                };
-              });
-            }
-          }
-
-          if (eventType === 'INSERT' && newRecord) {
-            // New item added — inject directly if it's visible, available, and matches filters
-            if (isItemMatchingFilters(newRecord)) {
-              const newItem = mapDbRecordToItem(newRecord);
-              setLoadedItems((prev) => {
-                if (prev.some((item) => item.id === newItem.id)) return prev;
-                setFadingInIds((ids) => new Set(ids).add(newItem.id));
-                setTimeout(() => {
-                  setFadingInIds((ids) => {
-                    const next = new Set(ids);
-                    next.delete(newItem.id);
-                    return next;
-                  });
-                }, 2500);
-                return [newItem, ...prev];
-              });
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [router, activeCategory, searchQuery]);
 
   // Sync state with props
   useEffect(() => {
@@ -464,13 +279,7 @@ export default function CatalogView({
                 key={item.id}
                 onClick={() => { if(!isUnavailable) openModal(item) }}
                 className={`bg-white rounded-xl sm:rounded-2xl overflow-hidden flex flex-col group border relative text-left w-full focus:outline-none content-visibility-card transition-all duration-400 ${
-                  removingIds.has(item.id) ? "opacity-0 scale-95 pointer-events-none" : ""
-                } ${
-                  fadingInIds.has(item.id)
-                    ? "animate-fade-in-glow"
-                    : isUnavailable
-                    ? "grayscale opacity-50 border-gray-150 shadow-none cursor-not-allowed"
-                    : "border-gray-150 shadow-none md:shadow-md md:hover:-translate-y-1 md:hover:shadow-lg transition-all duration-300"
+                  isUnavailable ? "grayscale opacity-50 border-gray-150 shadow-none cursor-not-allowed" : "border-gray-150 shadow-none md:shadow-md md:hover:-translate-y-1 md:hover:shadow-lg transition-all duration-300"
                 }`}
               >
                 <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">

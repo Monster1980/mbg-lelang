@@ -21,7 +21,7 @@ import {
   Loader2,
   ShieldAlert,
 } from "lucide-react";
-import { createClient } from "@/utils/supabase/client";
+
 
 type Item = {
   id: number;
@@ -63,24 +63,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
       .catch(() => {});
   }, []);
 
-  // Realtime subscription
-  useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase
-      .channel("schema-db-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "auction_items" },
-        () => {
-          router.refresh();
-        }
-      )
-      .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [router]);
 
   const formatIDR = (val: any) => {
     return new Intl.NumberFormat("id-ID", {
