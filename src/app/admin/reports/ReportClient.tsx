@@ -153,11 +153,12 @@ export default function ReportClient({
       </div>
 
       {/* Filter Card */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Filter className="w-4 h-4" /> Filter Laporan
-        </h3>
-        <div className="flex flex-wrap items-end gap-4">
+      <div className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+        <div className="flex items-center gap-2 font-semibold text-slate-700">
+          <Filter className="w-4 h-4 text-slate-400" />
+          FILTER LAPORAN
+        </div>
+        <div className="max-w-xs w-full">
           <div className="hidden">
             <label className="block text-xs text-slate-600 mb-1 font-medium">Cabang</label>
             <select
@@ -178,10 +179,7 @@ export default function ReportClient({
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-xs text-slate-600 mb-1 font-medium">Rentang Waktu</label>
-            <DateRangePicker value={dateRange} onChange={handleDateRangeChange} placeholder="Semua Waktu" />
-          </div>
+          <DateRangePicker value={dateRange} onChange={handleDateRangeChange} placeholder="Semua Waktu" />
         </div>
       </div>
 
