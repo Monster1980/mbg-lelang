@@ -19,6 +19,21 @@ import {
 import { Package, TrendingUp, DollarSign, Loader2, Calendar } from "lucide-react";
 import DateRangePicker, { DateRange } from "@/components/DateRangePicker";
 
+const toLocalIsoDateString = (date: Date | null): string => {
+  if (!date) return "";
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const parseLocalDate = (dateStr: string): Date | null => {
+  if (!dateStr || dateStr === "null") return null;
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return null;
+  return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+};
+
 type AnalyticsData = {
   totalActive: number;
   totalSold: number;
@@ -51,8 +66,8 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
 
   // Initialize date range from props
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: initialStartDate && initialStartDate !== "null" ? new Date(initialStartDate) : null,
-    to: initialEndDate && initialEndDate !== "null" ? new Date(initialEndDate) : null,
+    from: parseLocalDate(initialStartDate),
+    to: parseLocalDate(initialEndDate),
   });
 
   const formatIDR = (val: number) => {
@@ -76,8 +91,8 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
 
   useEffect(() => {
     // Avoid double fetching initial data on mount
-    const startIso = dateRange.from ? dateRange.from.toISOString().split("T")[0] : null;
-    const endIso = dateRange.to ? dateRange.to.toISOString().split("T")[0] : null;
+    const startIso = toLocalIsoDateString(dateRange.from);
+    const endIso = toLocalIsoDateString(dateRange.to || dateRange.from);
     const initStartIso = initialStartDate && initialStartDate !== "null" ? initialStartDate.split("T")[0] : null;
     const initEndIso = initialEndDate && initialEndDate !== "null" ? initialEndDate.split("T")[0] : null;
 

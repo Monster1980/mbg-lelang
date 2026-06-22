@@ -3,6 +3,28 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import ExcelJS from "exceljs";
 
+function parseWibStartOfDay(dateStr: string): Date {
+  const parts = dateStr.split("-");
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]) - 1;
+  const day = parseInt(parts[2]);
+  
+  const date = new Date(Date.UTC(year, month, day, 0, 0, 0));
+  date.setUTCHours(date.getUTCHours() - 7);
+  return date;
+}
+
+function parseWibEndOfDay(dateStr: string): Date {
+  const parts = dateStr.split("-");
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]) - 1;
+  const day = parseInt(parts[2]);
+  
+  const date = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+  date.setUTCHours(date.getUTCHours() - 7);
+  return date;
+}
+
 export async function GET(request: Request) {
   try {
     const session = await getSession();
@@ -34,12 +56,9 @@ export async function GET(request: Request) {
     }
 
     let dateFilter = {};
-    if (startParam && endParam) {
-      const start = new Date(startParam);
-      start.setHours(0, 0, 0, 0);
-
-      const end = new Date(endParam);
-      end.setHours(23, 59, 59, 999);
+    if (startParam && endParam && startParam !== "null" && endParam !== "null") {
+      const start = parseWibStartOfDay(startParam);
+      const end = parseWibEndOfDay(endParam);
 
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
         dateFilter = {

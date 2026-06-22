@@ -2,6 +2,45 @@ import { Status } from '@prisma/client';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+function parseWibStartOfDay(dateStr: string): Date {
+  const parts = dateStr.split("-");
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]) - 1;
+  const day = parseInt(parts[2]);
+  
+  const date = new Date(Date.UTC(year, month, day, 0, 0, 0));
+  date.setUTCHours(date.getUTCHours() - 7);
+  return date;
+}
+
+function parseWibEndOfDay(dateStr: string): Date {
+  const parts = dateStr.split("-");
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]) - 1;
+  const day = parseInt(parts[2]);
+  
+  const date = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+  date.setUTCHours(date.getUTCHours() - 7);
+  return date;
+}
+
+const getWibDateKey = (date: Date): string => {
+  const wibTime = date.getTime() + (7 * 60 * 60 * 1000);
+  const wibDate = new Date(wibTime);
+  const yyyy = wibDate.getUTCFullYear();
+  const mm = String(wibDate.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(wibDate.getUTCDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const getWibFormattedDate = (date: Date): string => {
+  const wibTime = date.getTime() + (7 * 60 * 60 * 1000);
+  const wibDate = new Date(wibTime);
+  const day = wibDate.getUTCDate();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+  return `${day} ${monthNames[wibDate.getUTCMonth()]}`;
+};
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -14,11 +53,8 @@ export async function GET(request: Request) {
     const hasDateRange = startDateParam && endDateParam && startDateParam !== "null" && endDateParam !== "null";
 
     if (hasDateRange) {
-      start = new Date(startDateParam);
-      start.setHours(0, 0, 0, 0);
-
-      end = new Date(endDateParam);
-      end.setHours(23, 59, 59, 999);
+      start = parseWibStartOfDay(startDateParam);
+      end = parseWibEndOfDay(endDateParam);
 
       if (isNaN(start.getTime()) || isNaN(end.getTime())) {
         return NextResponse.json(
@@ -72,18 +108,23 @@ export async function GET(request: Request) {
     }
 
     const tempDate = new Date(trendStart);
-    // Limit loop to max 5 years to prevent memory leaks if date range is extremely large
+    const endWibKey = getWibDateKey(trendEnd);
     let safetyCounter = 0;
-    while (tempDate <= trendEnd && safetyCounter < 2000) {
-      const key = tempDate.toISOString().split("T")[0];
-      const formattedDate = tempDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+    while (safetyCounter < 2000) {
+      const key = getWibDateKey(tempDate);
+      const formattedDate = getWibFormattedDate(tempDate);
       dailyMap[key] = { date: key, formattedDate, revenue: 0, count: 0 };
-      tempDate.setDate(tempDate.getDate() + 1);
+      
+      if (key === endWibKey) {
+        break;
+      }
+      
+      tempDate.setUTCDate(tempDate.getUTCDate() + 1);
       safetyCounter++;
     }
 
     sales.forEach(tx => {
-      const key = new Date(tx.transactionDate).toISOString().split("T")[0];
+      const key = getWibDateKey(new Date(tx.transactionDate));
       if (dailyMap[key]) {
         dailyMap[key].revenue += Number(tx.soldPrice);
         dailyMap[key].count += 1;

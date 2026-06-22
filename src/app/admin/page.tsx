@@ -5,6 +5,23 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import AdminDashboardClient from "./AdminDashboardClient";
 
+const getWibDateKey = (date: Date): string => {
+  const wibTime = date.getTime() + (7 * 60 * 60 * 1000);
+  const wibDate = new Date(wibTime);
+  const yyyy = wibDate.getUTCFullYear();
+  const mm = String(wibDate.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(wibDate.getUTCDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const getWibFormattedDate = (date: Date): string => {
+  const wibTime = date.getTime() + (7 * 60 * 60 * 1000);
+  const wibDate = new Date(wibTime);
+  const day = wibDate.getUTCDate();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+  return `${day} ${monthNames[wibDate.getUTCMonth()]}`;
+};
+
 function AdminDashboardSkeleton() {
   return (
     <div className="space-y-8 animate-pulse">
@@ -66,17 +83,23 @@ async function DashboardData() {
   // Daily trend
   const dailyMap: { [key: string]: { date: string; formattedDate: string; revenue: number; count: number } } = {};
   const tempDate = new Date(trendStart);
+  const endWibKey = getWibDateKey(trendEnd);
   let safetyCounter = 0;
-  while (tempDate <= trendEnd && safetyCounter < 2000) {
-    const key = tempDate.toISOString().split("T")[0];
-    const formattedDate = tempDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+  while (safetyCounter < 2000) {
+    const key = getWibDateKey(tempDate);
+    const formattedDate = getWibFormattedDate(tempDate);
     dailyMap[key] = { date: key, formattedDate, revenue: 0, count: 0 };
-    tempDate.setDate(tempDate.getDate() + 1);
+    
+    if (key === endWibKey) {
+      break;
+    }
+    
+    tempDate.setUTCDate(tempDate.getUTCDate() + 1);
     safetyCounter++;
   }
 
   sales.forEach(tx => {
-    const key = new Date(tx.transactionDate).toISOString().split("T")[0];
+    const key = getWibDateKey(new Date(tx.transactionDate));
     if (dailyMap[key]) {
       dailyMap[key].revenue += Number(tx.soldPrice);
       dailyMap[key].count += 1;

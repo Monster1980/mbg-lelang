@@ -6,6 +6,28 @@ import ReportClient from "./ReportClient";
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 
+function parseWibStartOfDay(dateStr: string): Date {
+  const parts = dateStr.split("-");
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]) - 1;
+  const day = parseInt(parts[2]);
+  
+  const date = new Date(Date.UTC(year, month, day, 0, 0, 0));
+  date.setUTCHours(date.getUTCHours() - 7);
+  return date;
+}
+
+function parseWibEndOfDay(dateStr: string): Date {
+  const parts = dateStr.split("-");
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]) - 1;
+  const day = parseInt(parts[2]);
+  
+  const date = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+  date.setUTCHours(date.getUTCHours() - 7);
+  return date;
+}
+
 export default async function SalesReportPage({
   searchParams,
 }: {
@@ -28,8 +50,8 @@ export default async function SalesReportPage({
   if (hasDateFilter) {
     dateFilter = {
       transactionDate: {
-        gte: new Date(startDate),
-        lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+        gte: parseWibStartOfDay(startDate),
+        lte: parseWibEndOfDay(endDate),
       }
     };
   }

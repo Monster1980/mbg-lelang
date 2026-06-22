@@ -5,6 +5,21 @@ import { useRouter } from "next/navigation";
 import { FileSpreadsheet, Filter } from "lucide-react";
 import DateRangePicker, { DateRange } from "@/components/DateRangePicker";
 
+const toLocalIsoDateString = (date: Date | null): string => {
+  if (!date) return "";
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const parseLocalDate = (dateStr: string): Date | null => {
+  if (!dateStr || dateStr === "null") return null;
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return null;
+  return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+};
+
 type Transaction = {
   id: number;
   sku: string;
@@ -42,16 +57,16 @@ export default function ReportClient({
 
   // Initialize dateRange from initial URL parameters
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: currentStart ? new Date(currentStart) : null,
-    to: currentEnd ? new Date(currentEnd) : null,
+    from: parseLocalDate(currentStart),
+    to: parseLocalDate(currentEnd),
   });
 
   // Sync state with URL props when they change (e.g. on navigation or browser back/forward)
   useEffect(() => {
     setBranch(currentBranch);
     setDateRange({
-      from: currentStart ? new Date(currentStart) : null,
-      to: currentEnd ? new Date(currentEnd) : null,
+      from: parseLocalDate(currentStart),
+      to: parseLocalDate(currentEnd),
     });
   }, [currentBranch, currentStart, currentEnd]);
 
@@ -62,8 +77,8 @@ export default function ReportClient({
     }
 
     if (selectedRange.from) {
-      const startStr = selectedRange.from.toISOString().split("T")[0];
-      const endStr = selectedRange.to ? selectedRange.to.toISOString().split("T")[0] : startStr;
+      const startStr = toLocalIsoDateString(selectedRange.from);
+      const endStr = toLocalIsoDateString(selectedRange.to || selectedRange.from);
       params.set("start", startStr);
       params.set("end", endStr);
     }
@@ -88,8 +103,8 @@ export default function ReportClient({
       params.set("branch", branch);
     }
     if (dateRange.from) {
-      const startStr = dateRange.from.toISOString().split("T")[0];
-      const endStr = dateRange.to ? dateRange.to.toISOString().split("T")[0] : startStr;
+      const startStr = toLocalIsoDateString(dateRange.from);
+      const endStr = toLocalIsoDateString(dateRange.to || dateRange.from);
       params.set("start", startStr);
       params.set("end", endStr);
     }
