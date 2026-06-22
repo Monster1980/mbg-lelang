@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/session";
 import { cookies } from "next/headers";
@@ -191,7 +192,7 @@ export async function PATCH(request: Request) {
         }
 
         // Upsert AuctionItem to sync with public catalog
-        await tx.auctionItem.upsert({
+        const auctionItem = await tx.auctionItem.upsert({
           where: { sku: contract.uniqueCode },
           update: {
             price: contract.sellingPrice || 0,
@@ -217,9 +218,14 @@ export async function PATCH(request: Request) {
           }
         });
         
-        return contract;
+        return { contract, auctionItem };
       });
-      return NextResponse.json({ success: true, data: result });
+
+      // Purge public catalog cache
+      revalidatePath("/");
+      revalidatePath(`/katalog/${result.auctionItem.id}`);
+
+      return NextResponse.json({ success: true, data: result.contract });
     }
 
     if (action === "TERJUAL") {
@@ -260,9 +266,16 @@ export async function PATCH(request: Request) {
           });
         }
         
-        return contract;
+        return { contract, auctionItem };
       });
-      return NextResponse.json({ success: true, data: result });
+
+      // Purge public catalog cache
+      revalidatePath("/");
+      if (result.auctionItem) {
+        revalidatePath(`/katalog/${result.auctionItem.id}`);
+      }
+
+      return NextResponse.json({ success: true, data: result.contract });
     }
 
     return NextResponse.json({ success: false, message: "Invalid action" }, { status: 400 });

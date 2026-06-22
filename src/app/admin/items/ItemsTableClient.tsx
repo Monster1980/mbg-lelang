@@ -90,6 +90,18 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
     }).format(Number(val));
   };
 
+  // Format a raw number string into Indonesian dot-separated thousands (e.g. "8000000" → "8.000.000")
+  const formatRupiahMask = (value: string): string => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return "";
+    return new Intl.NumberFormat("id-ID").format(Number(digits));
+  };
+
+  // Strip dots from masked string back to raw number (e.g. "8.000.000" → 8000000)
+  const parseRupiahMask = (value: string): number => {
+    return Number(value.replace(/\./g, "")) || 0;
+  };
+
   // 1. Filter by search
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
@@ -196,7 +208,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
     setSelectedItem(item);
     setEditForm({
       title: item.title,
-      price: String(item.price),
+      price: formatRupiahMask(String(item.price)),
       status: item.status,
     });
     setEditModalOpen(true);
@@ -211,7 +223,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: editForm.title,
-          price: Number(editForm.price),
+          price: parseRupiahMask(editForm.price),
           status: editForm.status,
         }),
       });
@@ -654,12 +666,14 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                   Harga (Rp)
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={editForm.price}
                   onChange={(e) =>
-                    setEditForm((f) => ({ ...f, price: e.target.value }))
+                    setEditForm((f) => ({ ...f, price: formatRupiahMask(e.target.value) }))
                   }
-                  className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                  placeholder="0"
+                  className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               {/* Status */}

@@ -5,7 +5,8 @@ import ImageSlider from "./ImageSlider";
 import Link from "next/link";
 import BackButton from "@/components/BackButton";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type Props = {
   params: Promise<{ id: string }>;

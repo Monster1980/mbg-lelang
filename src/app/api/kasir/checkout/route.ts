@@ -1,5 +1,6 @@
 import { Status } from '@prisma/client';
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
@@ -61,6 +62,12 @@ export async function POST(request: Request) {
 
       return results;
     });
+
+    // Purge public catalog cache so sold items disappear instantly
+    revalidatePath("/");
+    for (const item of items) {
+      revalidatePath(`/katalog/${item.itemId}`);
+    }
 
     return NextResponse.json({ success: true, data: result });
   } catch (error: any) {

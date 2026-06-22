@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
@@ -73,6 +74,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       data: updateData,
     });
 
+    // Purge public catalog cache so customers see changes instantly
+    revalidatePath("/");
+    revalidatePath(`/katalog/${itemId}`);
+
     return NextResponse.json({
       success: true,
       data: JSON.parse(JSON.stringify(updatedItem)),
@@ -125,6 +130,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     await prisma.auctionItem.delete({
       where: { id: itemId },
     });
+
+    // Purge public catalog cache so deleted items disappear instantly
+    revalidatePath("/");
+    revalidatePath(`/katalog/${itemId}`);
 
     return NextResponse.json({ success: true, message: "Barang berhasil dihapus." });
   } catch (error: any) {
