@@ -107,9 +107,9 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                   <td className="px-6 py-4 text-slate-900 font-medium">{formatIDR(item.price)}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold ${
-                      item.status === 'Tersedia' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                      item.status === 'Dipesan' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                      'bg-red-50 text-red-700 border border-red-200'
+                      item.status === 'LELANG' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      item.status === 'TERJUAL' ? 'bg-slate-700 text-white border border-slate-800' :
+                      'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}>
                       {item.status}
                     </span>
@@ -160,9 +160,9 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-slate-50">
               <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold ${
-                item.status === 'Tersedia' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                item.status === 'Dipesan' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                'bg-red-50 text-red-700 border border-red-200'
+                item.status === 'LELANG' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                item.status === 'TERJUAL' ? 'bg-slate-700 text-white border border-slate-800' :
+                'bg-amber-50 text-amber-700 border border-amber-200'
               }`}>
                 {item.status}
               </span>

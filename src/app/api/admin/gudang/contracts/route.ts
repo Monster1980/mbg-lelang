@@ -1,6 +1,7 @@
+import { PawnStatus } from '@prisma/client';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { PawnStatus } from "@prisma/client";
+
 
 // POST — Add a new PawnContract to an existing PhysicalItem (renewal/extension)
 export async function POST(request: Request) {
@@ -37,10 +38,10 @@ export async function POST(request: Request) {
     await prisma.pawnContract.updateMany({
       where: {
         physicalItemId,
-        status: { in: [PawnStatus.AKTIF, PawnStatus.DIPERPANJANG] },
+        status: { in: [PawnStatus.AKTIF, PawnStatus.PERPANJANG] },
       },
       data: {
-        status: PawnStatus.DIPERPANJANG,
+        status: PawnStatus.PERPANJANG,
         endDate: new Date(),
       },
     });
@@ -102,7 +103,7 @@ export async function PATCH(request: Request) {
       where: { id: contractId },
       data: {
         status: newStatus as PawnStatus,
-        endDate: newStatus === PawnStatus.LUNAS || newStatus === PawnStatus.LELANG ? new Date() : undefined,
+        endDate: newStatus === PawnStatus.TEBUS || newStatus === PawnStatus.LELANG ? new Date() : undefined,
       },
     });
 

@@ -1,9 +1,10 @@
 "use client";
+import { Status, AuctionItem } from '@prisma/client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Status, AuctionItem } from "@prisma/client";
+
 import { 
   LayoutGrid, 
   Laptop, 
@@ -266,7 +267,7 @@ export default function CatalogView({
             ))
           ) : displayedItems.length > 0 ? (
           displayedItems.map((item, index) => {
-            const isUnavailable = item.status === Status.Terjual || item.status === Status.Dipesan;
+            const isUnavailable = item.status === Status.Terjual;
             const conditionLabel = item.kondisi;
             
             // Mock recommendation logic
@@ -424,7 +425,7 @@ export default function CatalogView({
                           <ChevronRight className="w-5 h-5" />
                         </button>
                         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                          {selectedItem.images.map((_, idx) => (
+                          {selectedItem.images.map((_: string, idx: number) => (
                             <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentImageIndex ? 'w-4 bg-brand-600' : 'w-1.5 bg-white/60'}`} />
                           ))}
                         </div>

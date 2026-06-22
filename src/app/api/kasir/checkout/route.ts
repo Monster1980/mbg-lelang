@@ -1,3 +1,4 @@
+import { Status } from '@prisma/client';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -34,14 +35,14 @@ export async function POST(request: Request) {
         if (!dbItem) {
           throw new Error(`Barang dengan ID ${item.itemId} (SKU: ${item.sku}) tidak ditemukan.`);
         }
-        if (dbItem.status === "Terjual") {
+        if (dbItem.status === Status.Terjual) {
           throw new Error(`Barang "${dbItem.title}" (SKU: ${item.sku}) sudah terjual sebelumnya.`);
         }
 
         // 2. Update item status to Terjual
         const updatedItem = await tx.auctionItem.update({
           where: { id: item.itemId },
-          data: { status: "Terjual" },
+          data: { status: Status.Terjual },
         });
 
         // 3. Create sales transaction record

@@ -1,3 +1,4 @@
+import { Status } from '@prisma/client';
 export const dynamic = "force-dynamic";
 
 import { Suspense } from "react";
@@ -42,7 +43,7 @@ async function DashboardData() {
   // Parallelize queries to eliminate sequential blocking and reduce TTFB latency
   const [totalActive, sales] = await Promise.all([
     prisma.auctionItem.count({
-      where: { status: "Tersedia" }
+      where: { status: Status.Tersedia }
     }),
     prisma.salesTransaction.findMany({
       where: {

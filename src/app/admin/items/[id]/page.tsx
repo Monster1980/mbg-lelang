@@ -10,7 +10,17 @@ export default async function AdminItemDetailPage({ params }: Props) {
   const { id } = await params;
   
   const item = await prisma.auctionItem.findUnique({
-    where: { id: parseInt(id) }
+    where: { id: parseInt(id) },
+    include: {
+      physicalItem: {
+        include: {
+          contracts: {
+            orderBy: { createdAt: 'desc' },
+            take: 1
+          }
+        }
+      }
+    }
   });
 
   if (!item) {

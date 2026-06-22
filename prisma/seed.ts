@@ -1,13 +1,31 @@
-import { PrismaClient, Kondisi, Status } from "@prisma/client";
+import { PrismaClient, Kondisi, Role, Status } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding database...");
-
   // Clear existing data
   await prisma.salesTransaction.deleteMany();
   await prisma.auctionItem.deleteMany();
+  await prisma.pawnContract.deleteMany();
+  await prisma.physicalItem.deleteMany();
+  await prisma.user.deleteMany();
+
+  console.log("Seeding database...");
+
+  // 1. Create Users
+  const passwordHash = "admin123";
+
+  await prisma.user.createMany({
+    data: [
+      {
+        email: "superadmin@mbg.com",
+        password: passwordHash,
+        nama_lengkap: "Super Admin",
+        asal_cabang: "Pusat",
+        role: Role.SUPERADMIN,
+      },
+    ],
+  });
 
   // ─── Seed Auction Items ─────────────────────────────────────────────────────
   const items = await Promise.all([
@@ -77,7 +95,7 @@ async function main() {
         defects: "Satu titik terang (bright spot) kecil di pojok kiri bawah layar, hampir tidak terlihat saat penggunaan normal",
         kondisi: Kondisi.Bekas,
         price: 7800000,
-        status: Status.Dipesan,
+        status: Status.Terjual,
         images: [
           "https://placehold.co/800x600/0a1628/e0e0e0?text=MacBook+Air+M1",
         ],
@@ -296,3 +314,5 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
+
+export {};

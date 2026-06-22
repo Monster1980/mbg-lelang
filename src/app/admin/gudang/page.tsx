@@ -1,111 +1,87 @@
-export const dynamic = "force-dynamic";
-
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import { Warehouse, ScanSearch, PackagePlus, ArrowRight, Gavel, ShieldCheck, RefreshCw, Archive } from "lucide-react";
+import { PawnStatus } from "@prisma/client";
+import UnifiedGudangClient from "./UnifiedGudangClient";
+import { checkAndTransitionExpiredContracts } from "@/lib/gudang";
 
-export default async function GudangPage() {
-  const totalItems = await prisma.physicalItem.count();
+export default async function GudangUnifiedPage() {
+  const session = await getSession();
+  
+  if (!session) {
+    redirect("/admin/login");
+  }
 
-  const contractStats = await prisma.pawnContract.groupBy({
-    by: ["status"],
-    _count: { id: true },
+  // Auto-transition expired active contracts to PROSES_LELANG
+  await checkAndTransitionExpiredContracts();
+
+  // Fetch metrics for Dashboard and Lifecycle
+  const activeStatuses = [PawnStatus.AKTIF, PawnStatus.PERPANJANG, PawnStatus.PROSES_LELANG];
+
+  const [activeContracts, soldContracts, allCounts, totalBarangFisik] = await Promise.all([
+    prisma.pawnContract.findMany({
+      where: { status: { in: activeStatuses } },
+      select: { appraisalValue: true }
+    }),
+    prisma.pawnContract.findMany({
+      where: { status: PawnStatus.TERJUAL },
+      select: { sellingPrice: true, appraisalValue: true }
+    }),
+    prisma.pawnContract.groupBy({
+      by: ['status'],
+      _count: { status: true }
+    }),
+    prisma.physicalItem.count()
+  ]);
+
+  const activeLoanCapital = activeContracts.reduce((sum, c) => sum + Number(c.appraisalValue), 0);
+  const netProfit = soldContracts.reduce((sum, c) => {
+    const sp = c.sellingPrice ? Number(c.sellingPrice) : 0;
+    const ap = Number(c.appraisalValue);
+    return sum + (sp - ap);
+  }, 0);
+
+  // Default counts map
+  const statusCounts = {
+    AKTIF: 0,
+    PERPANJANG: 0,
+    PROSES_LELANG: 0,
+    LELANG: 0,
+    TERJUAL: 0,
+    TEBUS: 0,
+  };
+
+  allCounts.forEach(c => {
+    if (statusCounts.hasOwnProperty(c.status)) {
+      statusCounts[c.status as keyof typeof statusCounts] = c._count.status;
+    }
   });
 
-  const statusMap: Record<string, number> = {};
-  contractStats.forEach((s) => {
-    statusMap[s.status] = s._count.id;
-  });
-
-  const statCards = [
-    { label: "Total Barang Fisik", value: totalItems, icon: Archive, color: "bg-slate-700" },
-    { label: "Kontrak Aktif", value: statusMap["AKTIF"] || 0, icon: ShieldCheck, color: "bg-emerald-600" },
-    { label: "Diperpanjang", value: statusMap["DIPERPANJANG"] || 0, icon: RefreshCw, color: "bg-blue-600" },
-    { label: "Siap Lelang", value: statusMap["LELANG"] || 0, icon: Gavel, color: "bg-amber-600" },
-    { label: "Lunas", value: statusMap["LUNAS"] || 0, icon: ShieldCheck, color: "bg-green-600" },
-  ];
+  const lifecycleCounts = {
+    totalBarangFisik,
+    totalAktif: statusCounts.AKTIF,
+    totalDiperpanjang: statusCounts.PERPANJANG,
+    totalProsesLelang: statusCounts.PROSES_LELANG,
+    totalSiapLelang: statusCounts.LELANG,
+    totalLunas: statusCounts.TERJUAL + statusCounts.TEBUS
+  };
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2.5 bg-brand-100 rounded-xl">
-            <Warehouse className="w-6 h-6 text-brand-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">Gudang & Gadai</h1>
-            <p className="text-sm text-slate-500">Manajemen barang fisik, kontrak gadai, dan pipeline lelang.</p>
-          </div>
-        </div>
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full pb-20 bg-slate-50 min-h-screen">
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-2">
+          Gudang & <span className="text-blue-600">Gadai</span>
+        </h1>
+        <p className="text-sm md:text-base text-slate-500">
+          Manajemen barang fisik, kontrak gadai, dan metrik profitabilitas gudang.
+        </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-        {statCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <div key={card.label} className="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow">
-              <div className={`w-9 h-9 ${card.color} rounded-xl flex items-center justify-center mb-3`}>
-                <Icon className="w-4 h-4 text-white" />
-              </div>
-              <div className="text-2xl md:text-3xl font-black text-slate-900">{card.value}</div>
-              <div className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">{card.label}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link
-          href="/admin/gudang/stock-opname"
-          className="group bg-white border border-slate-200 rounded-2xl p-6 hover:border-brand-300 hover:shadow-lg transition-all flex items-start gap-4"
-        >
-          <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors">
-            <ScanSearch className="w-6 h-6 text-blue-700" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-slate-900 mb-1 group-hover:text-brand-700 transition-colors">Stock Opname</h3>
-            <p className="text-sm text-slate-500 mb-3">Scan kode unik untuk melihat riwayat lengkap & lokasi rak barang.</p>
-            <div className="flex items-center text-sm font-bold text-brand-600 gap-1">
-              Buka Scanner <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/gudang/laporan-siap-lelang"
-          className="group bg-white border border-slate-200 rounded-2xl p-6 hover:border-brand-300 hover:shadow-lg transition-all flex items-start gap-4"
-        >
-          <div className="p-3 bg-amber-100 rounded-xl group-hover:bg-amber-200 transition-colors">
-            <Gavel className="w-6 h-6 text-amber-700" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-slate-900 mb-1 group-hover:text-brand-700 transition-colors">Laporan Siap Lelang</h3>
-            <p className="text-sm text-slate-500 mb-3">Daftar barang jatuh tempo yang siap dipublikasikan manual ke marketplace.</p>
-            <div className="flex items-center text-sm font-bold text-brand-600 gap-1">
-              Buka Laporan <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/gudang/registrasi"
-          className="group bg-white border border-slate-200 rounded-2xl p-6 hover:border-brand-300 hover:shadow-lg transition-all flex items-start gap-4"
-        >
-          <div className="p-3 bg-emerald-100 rounded-xl group-hover:bg-emerald-200 transition-colors">
-            <PackagePlus className="w-6 h-6 text-emerald-700" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-slate-900 mb-1 group-hover:text-brand-700 transition-colors">Registrasi Barang Baru</h3>
-            <p className="text-sm text-slate-500 mb-3">Daftarkan barang fisik baru dan buat kontrak gadai pertama.</p>
-            <div className="flex items-center text-sm font-bold text-brand-600 gap-1">
-              Tambah Barang <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-        </Link>
-      </div>
+      <UnifiedGudangClient 
+        dashboardData={{ activeLoanCapital, netProfit, statusCounts }}
+        lifecycleCounts={lifecycleCounts}
+        cashierName={session.email || "Kasir MBG"}
+      />
     </div>
   );
 }

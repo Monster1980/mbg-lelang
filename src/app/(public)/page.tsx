@@ -19,9 +19,7 @@ export default async function PublicHomePage({ searchParams }: Props) {
       contains: "Pasuruan",
       mode: "insensitive" as const,
     },
-    status: {
-      notIn: [Status.Terjual, Status.Dipesan],
-    },
+    status: Status.Tersedia,
     isMarketplaceVisible: true,
   };
 
@@ -50,9 +48,7 @@ export default async function PublicHomePage({ searchParams }: Props) {
         contains: "Pasuruan",
         mode: "insensitive" as const,
       },
-      status: {
-        notIn: [Status.Terjual, Status.Dipesan],
-      },
+      status: Status.Tersedia,
       isMarketplaceVisible: true,
     },
   });

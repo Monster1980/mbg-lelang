@@ -1,3 +1,4 @@
+import { Status } from '@prisma/client';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
 
     // 1. Fetch current active stock items (Tersedia)
     const totalActive = await prisma.auctionItem.count({
-      where: { status: "Tersedia" }
+      where: { status: Status.Tersedia }
     });
 
     // 2. Fetch sales transactions in date range

@@ -1,4 +1,6 @@
-import { PrismaClient, Kondisi, Status } from '@prisma/client';
+import { PrismaClient, Kondisi } from '@prisma/client';
+import { Status } from '@prisma/client';
+
 
 const prisma = new PrismaClient();
 
@@ -32,7 +34,7 @@ async function main() {
     // Status probability: 60% Tersedia, 15% Dipesan, 25% Terjual
     const statusRand = Math.random();
     let status: Status = Status.Tersedia;
-    if (statusRand > 0.85) status = Status.Dipesan;
+    if (statusRand > 0.85) status = Status.Terjual;
     else if (statusRand > 0.60) status = Status.Terjual;
 
     const sku = `CAT-${Date.now()}-${randomNumber(1000, 9999)}-${i}`;
@@ -47,7 +49,7 @@ async function main() {
       kondisi,
       price,
       status,
-      isMarketplaceVisible: status === Status.Tersedia || status === Status.Dipesan,
+      isMarketplaceVisible: status === Status.Tersedia || status === Status.Terjual,
       images: [
         "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80",
         "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&q=80"
@@ -73,3 +75,5 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+export {};

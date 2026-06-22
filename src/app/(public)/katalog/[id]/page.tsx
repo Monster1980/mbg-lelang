@@ -1,3 +1,4 @@
+import { Status } from '@prisma/client';
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ImageSlider from "./ImageSlider";
@@ -47,7 +48,7 @@ export default async function DetailPage({ params }: Props) {
     }).format(Number(val));
   };
 
-  const isUnavailable = item.status === "Terjual" || item.status === "Dipesan";
+  const isUnavailable = item.status === Status.Terjual;
 
   const waMessage = `Halo Admin ${
     item.branchName

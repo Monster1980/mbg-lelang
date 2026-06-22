@@ -40,9 +40,9 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
               <div className="text-right">
                 <div className="text-2xl font-black text-gradient-gold">{formattedPrice}</div>
                 <div className={`mt-2 inline-flex px-3 py-1 rounded-md text-xs font-bold tracking-wider uppercase ${
-                    item.status === 'Tersedia' ? 'bg-green-500/20 text-green-400' :
-                    item.status === 'Dipesan' ? 'bg-amber-500/20 text-amber-400' :
-                    'bg-red-500/20 text-red-400'
+                    item.status === 'LELANG' ? 'bg-green-500/20 text-green-400' :
+                    item.status === 'TERJUAL' ? 'bg-slate-700 text-white' :
+                    'bg-amber-500/20 text-amber-400'
                   }`}>
                     {item.status}
                 </div>
@@ -53,6 +53,34 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
               <div><span className="text-text-muted block mb-1">Status Kondisi</span><span className="font-bold text-text-primary">{item.kondisi === 'Baru' ? '✨ Baru' : '♻️ Bekas'}</span></div>
               <div><span className="text-text-muted block mb-1">WhatsApp CS</span><span className="font-medium text-text-primary">{item.whatsappNumber}</span></div>
             </div>
+
+            {item.status === 'TERJUAL' && item.physicalItem?.contracts?.[0] && (
+              <div className="bg-emerald-900/20 border border-emerald-500/20 p-5 rounded-xl mb-6">
+                <h4 className="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                  <span className="text-lg">💰</span> Profit Metrics
+                </h4>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-text-muted block mb-1">Nilai Pinjaman (Modal)</span>
+                    <span className="font-medium text-red-400">
+                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.physicalItem.contracts[0].appraisalValue)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-text-muted block mb-1">Harga Jual</span>
+                    <span className="font-medium text-green-400">
+                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.price)}
+                    </span>
+                  </div>
+                  <div className="border-l border-white/10 pl-4">
+                    <span className="text-text-muted block mb-1">Net Profit</span>
+                    <span className="font-bold text-emerald-400 text-base">
+                      {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.price - item.physicalItem.contracts[0].appraisalValue)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div>
               <h4 className="text-sm font-semibold text-text-muted mb-2">Deskripsi:</h4>

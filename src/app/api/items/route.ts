@@ -1,3 +1,4 @@
+import { Status } from '@prisma/client';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
         defects: body.defects || null,
         kondisi: body.kondisi,
         price: body.price,
-        status: "Tersedia",
+        status: Status.Tersedia,
         images: body.images || [],
         whatsappNumber: body.whatsappNumber,
         youtubeUrl: body.youtubeUrl || null,
@@ -70,9 +71,7 @@ export async function GET(request: Request) {
         contains: "Pasuruan",
         mode: "insensitive" as const,
       },
-      status: {
-        notIn: ["Terjual", "Dipesan"],
-      },
+      status: Status.Tersedia,
       isMarketplaceVisible: true,
     };
 
