@@ -51,8 +51,8 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
 
   // Initialize date range from props
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(initialStartDate),
-    to: new Date(initialEndDate),
+    from: initialStartDate && initialStartDate !== "null" ? new Date(initialStartDate) : null,
+    to: initialEndDate && initialEndDate !== "null" ? new Date(initialEndDate) : null,
   });
 
   const formatIDR = (val: number) => {
@@ -78,8 +78,8 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
     // Avoid double fetching initial data on mount
     const startIso = dateRange.from ? dateRange.from.toISOString().split("T")[0] : null;
     const endIso = dateRange.to ? dateRange.to.toISOString().split("T")[0] : null;
-    const initStartIso = initialStartDate.split("T")[0];
-    const initEndIso = initialEndDate.split("T")[0];
+    const initStartIso = initialStartDate && initialStartDate !== "null" ? initialStartDate.split("T")[0] : null;
+    const initEndIso = initialEndDate && initialEndDate !== "null" ? initialEndDate.split("T")[0] : null;
 
     if (startIso === initStartIso && endIso === initEndIso && data === initialData) {
       return;

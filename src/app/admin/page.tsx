@@ -30,28 +30,12 @@ function AdminDashboardSkeleton() {
 }
 
 async function DashboardData() {
-  const today = new Date();
-  
-  // Start date: 1st of current month
-  const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-  startDate.setHours(0, 0, 0, 0);
-
-  // End date: end of today
-  const endDate = new Date(today);
-  endDate.setHours(23, 59, 59, 999);
-
   // Parallelize queries to eliminate sequential blocking and reduce TTFB latency
   const [totalActive, sales] = await Promise.all([
     prisma.auctionItem.count({
       where: { status: Status.Tersedia }
     }),
     prisma.salesTransaction.findMany({
-      where: {
-        transactionDate: {
-          gte: startDate,
-          lte: endDate
-        }
-      },
       include: {
         item: {
           select: {
@@ -69,14 +53,26 @@ async function DashboardData() {
   const totalSold = sales.length;
   const totalRevenue = sales.reduce((sum, tx) => sum + Number(tx.soldPrice), 0);
 
+  // Determine trend start date dynamically (oldest transaction or fallback to 2024-01-01)
+  let trendStart = new Date("2024-01-01T00:00:00.000Z");
+  const trendEnd = new Date();
+
+  if (sales.length > 0) {
+    const oldestTx = sales[sales.length - 1];
+    trendStart = new Date(oldestTx.transactionDate);
+    trendStart.setHours(0, 0, 0, 0);
+  }
+
   // Daily trend
   const dailyMap: { [key: string]: { date: string; formattedDate: string; revenue: number; count: number } } = {};
-  const tempDate = new Date(startDate);
-  while (tempDate <= endDate) {
+  const tempDate = new Date(trendStart);
+  let safetyCounter = 0;
+  while (tempDate <= trendEnd && safetyCounter < 2000) {
     const key = tempDate.toISOString().split("T")[0];
     const formattedDate = tempDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
     dailyMap[key] = { date: key, formattedDate, revenue: 0, count: 0 };
     tempDate.setDate(tempDate.getDate() + 1);
+    safetyCounter++;
   }
 
   sales.forEach(tx => {
@@ -134,8 +130,8 @@ async function DashboardData() {
   return (
     <AdminDashboardClient 
       initialData={initialData}
-      initialStartDate={startDate.toISOString()}
-      initialEndDate={endDate.toISOString()}
+      initialStartDate="null"
+      initialEndDate="null"
     />
   );
 }
