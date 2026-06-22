@@ -13,7 +13,7 @@ export default async function SalesReportPage({
 }) {
   const session = await getSession();
   if (!session) {
-    redirect("/admin/login");
+    redirect("/mbg-auth-pasuruan");
   }
 
   const resolvedParams = await searchParams;
@@ -24,7 +24,8 @@ export default async function SalesReportPage({
   const isSuperAdmin = session.role === "SUPERADMIN";
 
   let dateFilter = {};
-  if (startDate && endDate) {
+  const hasDateFilter = startDate && endDate && startDate !== "null" && endDate !== "null";
+  if (hasDateFilter) {
     dateFilter = {
       transactionDate: {
         gte: new Date(startDate),

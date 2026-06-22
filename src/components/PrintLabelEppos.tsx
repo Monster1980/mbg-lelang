@@ -46,25 +46,25 @@ export default function PrintLabelEppos({
           making it easily translatable into ESC/POS thermal command bytes 
           for future React Native / Bluetooth mobile print controllers.
       */}
-      <div className="flex flex-col items-center justify-between p-6 bg-white text-black box-border overflow-hidden rounded-2xl shadow-xl border border-slate-200 relative z-10 mx-auto max-w-[300px] text-center print:absolute print:left-0 print:top-0 print:w-[80mm] print:h-[100mm] print:max-w-[80mm] print:max-h-[100mm] print:p-6 print:m-0 print:rounded-none print:border-none print:shadow-none">
+      <div className="receipt-print-wrapper flex flex-col items-center justify-between p-6 bg-white text-black box-border overflow-hidden rounded-2xl shadow-xl border border-slate-200 relative z-10 mx-auto max-w-[300px] text-center">
         
         {/* HEADER */}
-        <div className="text-lg font-bold tracking-wider border-b-2 border-black pb-2 w-full text-center uppercase">
+        <div className="text-lg font-bold tracking-wide border-b-2 border-black pb-2 w-full text-center uppercase print:text-base print:leading-tight">
           PT MBG - {branchName}
         </div>
 
         {/* BODY CONTENT */}
         <div className="flex flex-col items-center w-full">
-          <div className="text-base font-semibold mt-4 text-center w-full break-words">
+          <div className="text-base font-semibold mt-4 text-center w-full break-words print:text-xs print:mt-1 print:text-slate-800 line-clamp-1">
             {title}
           </div>
-          <div className="text-sm text-slate-700 mt-1">
+          <div className="text-sm text-slate-700 mt-1 print:text-[10px] print:mt-0.5">
             {category} • {kondisi}
           </div>
 
           {/* PRICE DISPLAY */}
           {hasSellingPrice && (
-            <div className="text-3xl md:text-4xl font-black text-black border-2 border-dashed border-black py-2 px-4 my-2 block tracking-wider">
+            <div className="w-full max-w-[85mm] box-border text-center text-3xl md:text-4xl print:text-xl font-black text-black border-2 border-dashed border-black py-2 px-4 print:py-1 print:my-1.5 block tracking-wider mx-auto">
               {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(parsedPrice)}
             </div>
           )}
@@ -81,7 +81,7 @@ export default function PrintLabelEppos({
             background="#ffffff"
             lineColor="#000000"
           />
-          <div className="font-mono tracking-wider text-sm font-bold text-center mt-2">
+          <div className="font-mono tracking-wider text-sm font-bold text-center mt-2 w-full">
             {sku}
           </div>
         </div>
@@ -89,7 +89,7 @@ export default function PrintLabelEppos({
 
       {!hideDisclaimer && (
         <p className="text-xs text-slate-500 text-center mt-6 print:hidden bg-slate-50 p-3 rounded-lg border border-slate-100">
-          💡 Saat menekan Print, hanya area stiker putih ini yang akan tercetak ke kertas thermal (ukuran 80mm x 100mm).
+          💡 Saat menekan Print, hanya area stiker putih ini yang akan tercetak ke kertas thermal (ukuran 100mm x 80mm).
         </p>
       )}
 
@@ -98,11 +98,12 @@ export default function PrintLabelEppos({
         __html: `
         @media print {
           @page {
-            size: 80mm 100mm;
-            margin: 0mm !important; /* This strips browser headers/footers completely */
+            size: 100mm 80mm !important;
+            margin: 0 !important; /* Strips browser space leakage completely */
           }
           body {
             margin: 0 !important;
+            padding: 0 !important;
             -webkit-print-color-adjust: exact;
             background-color: white !important;
             image-rendering: pixelated;
@@ -117,6 +118,50 @@ export default function PrintLabelEppos({
           }
           .print\\:hidden {
             display: none !important;
+          }
+          /* Lock the master wrapper tightly inside label dimensions */
+          .receipt-print-wrapper {
+            visibility: visible !important;
+            width: 100mm !important;
+            height: 80mm !important;
+            max-width: 100mm !important;
+            max-height: 80mm !important;
+            box-sizing: border-box !important;
+            padding: 4mm 6mm !important; /* Safe inner bounds */
+            overflow: hidden !important; /* Prevents text from making a 2nd page */
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important; /* Distributes items nicely within 80mm */
+            align-items: center !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            background-color: white !important;
+          }
+          .receipt-print-wrapper * {
+            visibility: visible !important;
+          }
+          .barcode-container {
+            padding-top: 2px !important;
+            margin-top: auto !important;
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+          }
+          .barcode-container svg {
+            max-width: 100% !important;
+            max-height: 20mm !important;
+            width: auto !important;
+            height: auto !important;
+          }
+          .barcode-container div {
+            font-size: 10px !important;
+            margin-top: 2px !important;
           }
         }
       `}} />

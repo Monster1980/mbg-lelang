@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FileSpreadsheet, Filter, Search } from "lucide-react";
+import { FileSpreadsheet, Filter } from "lucide-react";
 import DateRangePicker, { DateRange } from "@/components/DateRangePicker";
 
 type Transaction = {
@@ -46,15 +46,24 @@ export default function ReportClient({
     to: currentEnd ? new Date(currentEnd) : null,
   });
 
-  const applyFilters = () => {
+  // Sync state with URL props when they change (e.g. on navigation or browser back/forward)
+  useEffect(() => {
+    setBranch(currentBranch);
+    setDateRange({
+      from: currentStart ? new Date(currentStart) : null,
+      to: currentEnd ? new Date(currentEnd) : null,
+    });
+  }, [currentBranch, currentStart, currentEnd]);
+
+  const navigateWithFilters = (selectedBranch: string, selectedRange: DateRange) => {
     const params = new URLSearchParams();
-    if (branch) {
-      params.set("branch", branch);
+    if (selectedBranch && selectedBranch !== "all") {
+      params.set("branch", selectedBranch);
     }
 
-    if (dateRange.from) {
-      const startStr = dateRange.from.toISOString().split("T")[0];
-      const endStr = dateRange.to ? dateRange.to.toISOString().split("T")[0] : startStr;
+    if (selectedRange.from) {
+      const startStr = selectedRange.from.toISOString().split("T")[0];
+      const endStr = selectedRange.to ? selectedRange.to.toISOString().split("T")[0] : startStr;
       params.set("start", startStr);
       params.set("end", endStr);
     }
@@ -62,10 +71,14 @@ export default function ReportClient({
     router.push(`/admin/reports?${params.toString()}`);
   };
 
-  const clearFilters = () => {
-    setBranch(isSuperAdmin ? "all" : currentBranch);
-    setDateRange({ from: null, to: null });
-    router.push(`/admin/reports`);
+  const handleBranchChange = (newBranch: string) => {
+    setBranch(newBranch);
+    navigateWithFilters(newBranch, dateRange);
+  };
+
+  const handleDateRangeChange = (newRange: DateRange) => {
+    setDateRange(newRange);
+    navigateWithFilters(branch, newRange);
   };
 
   const handleExportExcel = () => {
@@ -128,7 +141,7 @@ export default function ReportClient({
             <select
               disabled={!isSuperAdmin}
               value={branch}
-              onChange={(e) => setBranch(e.target.value)}
+              onChange={(e) => handleBranchChange(e.target.value)}
               className={`${
                 !isSuperAdmin 
                   ? "bg-slate-50 text-slate-500 cursor-not-allowed" 
@@ -145,21 +158,7 @@ export default function ReportClient({
           </div>
           <div>
             <label className="block text-xs text-slate-600 mb-1 font-medium">Rentang Waktu</label>
-            <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Semua Waktu" />
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={applyFilters}
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-md transition-colors flex items-center gap-2 shadow-sm"
-            >
-              <Search className="w-4 h-4" /> Terapkan
-            </button>
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-md transition-colors shadow-sm"
-            >
-              Reset
-            </button>
+            <DateRangePicker value={dateRange} onChange={handleDateRangeChange} placeholder="Semua Waktu" />
           </div>
         </div>
       </div>

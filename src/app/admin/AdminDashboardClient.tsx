@@ -75,11 +75,9 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
   };
 
   useEffect(() => {
-    if (!dateRange.from || !dateRange.to) return;
-
     // Avoid double fetching initial data on mount
-    const startIso = dateRange.from.toISOString().split("T")[0];
-    const endIso = dateRange.to.toISOString().split("T")[0];
+    const startIso = dateRange.from ? dateRange.from.toISOString().split("T")[0] : null;
+    const endIso = dateRange.to ? dateRange.to.toISOString().split("T")[0] : null;
     const initStartIso = initialStartDate.split("T")[0];
     const initEndIso = initialEndDate.split("T")[0];
 
@@ -92,7 +90,11 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
     async function fetchAnalytics() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/admin/analytics?startDate=${startIso}&endDate=${endIso}`);
+        const queryParams = new URLSearchParams();
+        if (startIso) queryParams.set("startDate", startIso);
+        if (endIso) queryParams.set("endDate", endIso);
+
+        const res = await fetch(`/api/admin/analytics?${queryParams.toString()}`);
         const result = await res.json();
         if (active && result.success) {
           setData(result.data);

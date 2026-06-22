@@ -169,7 +169,7 @@ export default async function DetailPage({ params }: Props) {
             </a>
             
             <a
-              href="https://www.google.com/maps/search/?api=1&query=PT+MBG+Pasuruan"
+              href="https://maps.app.goo.gl/fnR6mUaLTjGJCTrj7"
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 justify-center items-center gap-2 px-5 py-3.5 rounded-xl font-bold transition-all text-sm border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 active:bg-slate-100 shadow-sm flex hover:scale-[1.01]"

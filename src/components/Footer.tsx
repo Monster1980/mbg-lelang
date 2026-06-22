@@ -13,7 +13,7 @@ export default function Footer() {
             className="w-auto h-20 sm:h-24 object-contain"
           />
         </div>
-        <p className="mb-2 font-semibold text-slate-800">PT Mitra Bisnis Gadai</p>
+        <p className="mb-2 font-semibold text-slate-800">PT Makmur Bersama Gadai</p>
         <p className="text-sm text-slate-600 mb-6 max-w-md mx-auto">Platform O2O (Online-to-Offline) Katalog Barang Bekas & Lelang. Telusuri online, transaksikan dengan aman di cabang kami.</p>
         
         <div className="pt-6 border-t border-slate-200 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -11,7 +11,7 @@ export default function AdminSidebar({ role, userBranch }: { role: Role, userBra
 
   const handleLogout = async () => {
     await fetch("/api/auth", { method: "DELETE" });
-    router.push("/admin/login");
+    router.push("/mbg-auth-pasuruan");
     router.refresh();
   };
 

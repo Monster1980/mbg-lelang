@@ -16,7 +16,7 @@ type Props = {
 
 type PresetKey = "today" | "last7" | "thisMonth" | "thisYear" | "all" | null;
 
-export default function DateRangePicker({ value, onChange, placeholder = "Pilih rentang tanggal" }: Props) {
+export default function DateRangePicker({ value, onChange, placeholder = "Semua Waktu" }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Internal draft state — only committed on "Terapkan Filter"

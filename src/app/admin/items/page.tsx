@@ -18,6 +18,7 @@ export default async function AdminItemsPage() {
     branchName: item.branchName,
     price: Number(item.price),
     status: item.status,
+    isMarketplaceVisible: item.isMarketplaceVisible,
   }));
 
   return (

@@ -32,7 +32,7 @@ function AddItemForm() {
     category: "Elektronik",
     price: "",
     kondisi: "Baru",
-    whatsappNumber: "6281234567890",
+    whatsappNumber: "6281213211413",
     description: "",
     defects: "",
     youtubeUrl: "",

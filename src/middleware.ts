@@ -18,14 +18,15 @@ export async function middleware(request: NextRequest) {
 
   // 2. Protect Admin Web routes
   if (pathname.startsWith('/admin')) {
-    if (pathname === '/admin/login') {
-      if (isAuthenticated) {
-        return NextResponse.redirect(new URL('/admin', request.url));
-      }
-    } else {
-      if (!isAuthenticated) {
-        return NextResponse.redirect(new URL('/admin/login', request.url));
-      }
+    if (!isAuthenticated) {
+      return NextResponse.redirect(new URL('/mbg-auth-pasuruan', request.url));
+    }
+  }
+
+  // 3. Prevent authenticated users from going back to the login page
+  if (pathname === '/mbg-auth-pasuruan') {
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL('/admin', request.url));
     }
   }
   
@@ -33,5 +34,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
+  matcher: ['/admin/:path*', '/api/admin/:path*', '/mbg-auth-pasuruan'],
 };

@@ -8,24 +8,24 @@ export async function GET(request: Request) {
     const startDateParam = searchParams.get("startDate");
     const endDateParam = searchParams.get("endDate");
 
-    if (!startDateParam || !endDateParam) {
-      return NextResponse.json(
-        { success: false, message: "startDate dan endDate wajib disertakan." },
-        { status: 400 }
-      );
-    }
+    let start: Date | null = null;
+    let end: Date | null = null;
 
-    const start = new Date(startDateParam);
-    start.setHours(0, 0, 0, 0);
+    const hasDateRange = startDateParam && endDateParam && startDateParam !== "null" && endDateParam !== "null";
 
-    const end = new Date(endDateParam);
-    end.setHours(23, 59, 59, 999);
+    if (hasDateRange) {
+      start = new Date(startDateParam);
+      start.setHours(0, 0, 0, 0);
 
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return NextResponse.json(
-        { success: false, message: "Format tanggal tidak valid." },
-        { status: 400 }
-      );
+      end = new Date(endDateParam);
+      end.setHours(23, 59, 59, 999);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return NextResponse.json(
+          { success: false, message: "Format tanggal tidak valid." },
+          { status: 400 }
+        );
+      }
     }
 
     // 1. Fetch current active stock items (Tersedia)
@@ -33,14 +33,16 @@ export async function GET(request: Request) {
       where: { status: Status.Tersedia }
     });
 
+    const dateFilter = start && end ? {
+      transactionDate: {
+        gte: start,
+        lte: end
+      }
+    } : {};
+
     // 2. Fetch sales transactions in date range
     const sales = await prisma.salesTransaction.findMany({
-      where: {
-        transactionDate: {
-          gte: start,
-          lte: end
-        }
-      },
+      where: dateFilter,
       include: {
         item: {
           select: {
@@ -60,10 +62,19 @@ export async function GET(request: Request) {
 
     // 4. Generate daily trend data (smooth, no missing dates)
     const dailyMap: { [key: string]: { date: string; formattedDate: string; revenue: number; count: number } } = {};
-    const tempDate = new Date(start);
+    let trendStart = start || new Date("2024-01-01T00:00:00.000Z");
+    let trendEnd = end || new Date();
+
+    if (!start && sales.length > 0) {
+      const oldestTx = sales[sales.length - 1];
+      trendStart = new Date(oldestTx.transactionDate);
+      trendStart.setHours(0, 0, 0, 0);
+    }
+
+    const tempDate = new Date(trendStart);
     // Limit loop to max 5 years to prevent memory leaks if date range is extremely large
     let safetyCounter = 0;
-    while (tempDate <= end && safetyCounter < 2000) {
+    while (tempDate <= trendEnd && safetyCounter < 2000) {
       const key = tempDate.toISOString().split("T")[0];
       const formattedDate = tempDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
       dailyMap[key] = { date: key, formattedDate, revenue: 0, count: 0 };

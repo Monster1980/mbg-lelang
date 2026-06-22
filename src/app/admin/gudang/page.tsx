@@ -9,7 +9,7 @@ export default async function GudangUnifiedPage() {
   const session = await getSession();
   
   if (!session) {
-    redirect("/admin/login");
+    redirect("/mbg-auth-pasuruan");
   }
 
   // Auto-transition expired active contracts to PROSES_LELANG
