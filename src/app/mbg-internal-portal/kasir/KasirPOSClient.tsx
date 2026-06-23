@@ -31,6 +31,7 @@ type CartItem = {
   discount: number;
   discountDisplay: string;
   images: string[];
+  hasWarranty: boolean;
 };
 
 type LastTx = {
@@ -246,6 +247,7 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
           discount: 0,
           discountDisplay: "",
           images: data.data.images || [],
+          hasWarranty: !!data.data.hasWarranty,
         };
         setCartItems((prev) => [...prev, newItem]);
         playBeep(true);
@@ -738,6 +740,11 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
                   <div className="flex justify-between text-[9px]">
                     <span>Diskon:</span>
                     <span>- {formatIDR(item.discount)}</span>
+                  </div>
+                )}
+                {item.hasWarranty && (
+                  <div className="font-bold text-[9px] text-black mt-0.5">
+                    [ 🛡️ GARANSI RESMI MBG ]
                   </div>
                 )}
               </div>

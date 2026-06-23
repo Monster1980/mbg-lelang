@@ -119,6 +119,7 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
             kondisi={item.kondisi}
             sku={item.sku}
             sellingPrice={item.price}
+            hasWarranty={item.hasWarranty}
           />
         </div>
 

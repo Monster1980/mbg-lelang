@@ -40,6 +40,7 @@ model AuctionItem {
   kondisi              Kondisi
   physicalItemId       String?            @map("physical_item_id")
   isMarketplaceVisible Boolean            @default(true) @map("is_marketplace_visible")
+  hasWarranty          Boolean            @default(false) @map("has_warranty")
   physicalItem         PhysicalItem?      @relation(fields: [physicalItemId], references: [id])
   transactions         SalesTransaction[]
 
@@ -143,4 +144,5 @@ enum Status {
   Tersedia
   Dipesan
   Terjual
+  RETUR
 }

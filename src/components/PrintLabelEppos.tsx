@@ -14,6 +14,7 @@ export type PrintLabelProps = {
   hargaJual?: number | string;
   className?: string;
   hideDisclaimer?: boolean;
+  hasWarranty?: boolean;
 };
 
 export default function PrintLabelEppos({
@@ -27,6 +28,7 @@ export default function PrintLabelEppos({
   hargaJual,
   className = "",
   hideDisclaimer = false,
+  hasWarranty = false,
 }: PrintLabelProps) {
   const priceVal = sellingPrice !== undefined ? sellingPrice : hargaJual;
   const parsedPrice = typeof priceVal === "number" ? priceVal : parseFloat(String(priceVal || ""));
@@ -65,6 +67,11 @@ export default function PrintLabelEppos({
           <div className="text-sm text-slate-700 mt-1 print:text-[10px] print:mt-0.5">
             {category} • {kondisi}
           </div>
+          {hasWarranty && (
+            <div className="text-[10px] md:text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded px-2 py-0.5 mt-1.5 uppercase tracking-wide print:text-[9px] print:leading-none print:mt-1">
+              [ 🛡️ GARANSI RESMI MBG ]
+            </div>
+          )}
 
           {/* PRICE DISPLAY */}
           {hasSellingPrice && (

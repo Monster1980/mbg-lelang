@@ -31,13 +31,12 @@ export default function AdminBottomNav() {
   const scannerRef = useRef<any>(null);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
 
-  const leftTabs = [
+  const tabs = [
     { name: "Dashboard", href: "/mbg-internal-portal", icon: LayoutDashboard },
     { name: "Semua Barang", href: "/mbg-internal-portal/items", icon: PackageSearch },
-  ];
-
-  const rightTabs = [
+    { name: "Scan POS", isFab: true },
     { name: "POS Kasir", href: "/mbg-internal-portal/kasir", icon: ScanLine },
+    { name: "Laporan", href: "/mbg-internal-portal/reports", icon: BarChart3 },
   ];
 
   const startCamera = useCallback(async () => {
@@ -188,55 +187,50 @@ export default function AdminBottomNav() {
     };
   }, [isScannerOpen, startCamera, stopCamera]);
 
-  const renderTab = (tab: any) => {
-    let isActive = false;
-    if (tab.href === "/mbg-internal-portal" || tab.href === "/mbg-internal-portal/items") {
-      isActive = pathname === tab.href;
-    } else {
-      isActive = pathname.startsWith(tab.href);
-    }
-
-    const Icon = tab.icon;
-
-    return (
-      <Link
-        key={tab.href}
-        href={tab.href}
-        prefetch={true}
-        className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
-          isActive ? "text-brand-600" : "text-slate-400 hover:text-slate-600"
-        }`}
-      >
-        <Icon className={`w-5 h-5 ${isActive ? "text-brand-600" : ""}`} />
-        <span className={`text-[9px] sm:text-[10px] font-bold ${isActive ? "text-brand-600" : ""}`}>
-          {tab.name}
-        </span>
-      </Link>
-    );
-  };
-
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 flex justify-around items-center h-16 md:hidden px-1 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
-        {/* Left Tabs */}
-        <div className="flex flex-1 h-full items-center justify-around">
-          {leftTabs.map(renderTab)}
-        </div>
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 grid grid-cols-5 h-16 md:hidden px-1 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
+        {tabs.map((tab, index) => {
+          if (tab.isFab) {
+            return (
+              <div key={index} className="relative w-full h-full flex flex-col items-center justify-center">
+                <button
+                  onClick={() => setIsScannerOpen(true)}
+                  className="absolute -top-4 w-14 h-14 bg-blue-600 hover:bg-blue-500 active:scale-95 transition-all text-white rounded-full flex flex-col items-center justify-center shadow-[0_8px_16px_rgba(37,99,235,0.4)] border-4 border-white"
+                >
+                  <ScanBarcode className="w-6 h-6" />
+                </button>
+              </div>
+            );
+          }
 
-        {/* Center Quick Scan FAB */}
-        <div className="relative w-16 h-16 flex-shrink-0 -translate-y-4">
-          <button
-            onClick={() => setIsScannerOpen(true)}
-            className="absolute inset-0 m-auto w-14 h-14 bg-blue-600 hover:bg-blue-500 active:scale-95 transition-all text-white rounded-full flex flex-col items-center justify-center shadow-[0_8px_16px_rgba(37,99,235,0.4)] border-4 border-white"
-          >
-            <ScanBarcode className="w-6 h-6" />
-          </button>
-        </div>
+          if (!tab.href) return null;
 
-        {/* Right Tabs */}
-        <div className="flex flex-1 h-full items-center justify-around">
-          {rightTabs.map(renderTab)}
-        </div>
+          let isActive = false;
+          if (tab.href === "/mbg-internal-portal" || tab.href === "/mbg-internal-portal/items") {
+            isActive = pathname === tab.href;
+          } else {
+            isActive = pathname.startsWith(tab.href);
+          }
+
+          const Icon = tab.icon as any;
+
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              prefetch={true}
+              className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+                isActive ? "text-brand-600" : "text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              <Icon className={`w-5 h-5 ${isActive ? "text-brand-600" : ""}`} />
+              <span className={`text-[9px] sm:text-[10px] font-bold ${isActive ? "text-brand-600" : ""}`}>
+                {tab.name}
+              </span>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Global Scanner Overlay Modal */}

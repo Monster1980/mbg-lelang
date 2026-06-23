@@ -44,6 +44,7 @@ function AddItemForm() {
     description: "",
     defects: "",
     youtubeUrl: "",
+    hasWarranty: false,
   });
 
   useEffect(() => {
@@ -178,7 +179,7 @@ function AddItemForm() {
           : ["https://placehold.co/800x600/f1f5f9/94a3b8?text=No+Image"],
         youtubeUrl: formData.youtubeUrl.trim() || null,
         physicalItemId,
-        isMarketplaceVisible: true,
+        isMarketplaceVisible: false,
       };
 
       const res = await fetch("/api/items", {
@@ -193,7 +194,7 @@ function AddItemForm() {
         setNotification({
           isOpen: true,
           type: "success",
-          message: "Barang berhasil disimpan ke katalog lelang.",
+          message: "Barang Berhasil Disimpan! Status otomatis disembunyikan (Hidden) untuk keperluan pengecekan manual detail barang oleh admin sebelum dipublish ke katalog.",
         });
       } else {
         setNotification({
@@ -225,7 +226,7 @@ function AddItemForm() {
   const totalOriginal = compressedImages.reduce((acc, img) => acc + img.originalSize, 0);
 
   const inputClassName =
-    "w-full bg-white border border-slate-300 rounded-xl px-4 py-3 md:py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-sm text-base md:text-sm";
+    "w-full bg-white border border-slate-300 rounded-xl px-4 py-3 md:py-2.5 min-h-[44px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-sm text-base md:text-sm";
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-12">
@@ -404,6 +405,23 @@ function AddItemForm() {
               </>
             )}
 
+            {/* Warranty Checkbox */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Garansi</label>
+              <div className="flex items-center gap-3 bg-white border border-slate-300 rounded-xl px-4 py-3 min-h-[44px] shadow-sm">
+                <input
+                  type="checkbox"
+                  id="hasWarranty"
+                  checked={formData.hasWarranty}
+                  onChange={(e) => setFormData({ ...formData, hasWarranty: e.target.checked })}
+                  className="w-5 h-5 text-brand-600 border-slate-300 rounded focus:ring-brand-500 transition-all cursor-pointer"
+                />
+                <label htmlFor="hasWarranty" className="text-sm font-semibold text-slate-700 cursor-pointer select-none">
+                  🛡️ Memiliki Garansi Resmi MBG
+                </label>
+              </div>
+            </div>
+
             {/* ROW 5 - Textareas */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -426,7 +444,7 @@ function AddItemForm() {
                 rows={5}
                 value={formData.defects}
                 onChange={(e) => setFormData({ ...formData, defects: e.target.value })}
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 md:py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all shadow-sm text-base md:text-sm"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 md:py-2.5 min-h-[44px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all shadow-sm text-base md:text-sm"
                 placeholder="Catat jika ada lecet, kerusakan kecil, dll."
               />
             </div>
@@ -525,7 +543,7 @@ function AddItemForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full md:w-auto px-8 py-3.5 md:py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold shadow-md hover:shadow-lg hover:shadow-brand-500/20 transition-all disabled:opacity-70 disabled:hover:shadow-md flex justify-center items-center gap-2"
+              className="w-full md:w-auto px-8 py-3.5 md:py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold shadow-md hover:shadow-lg hover:shadow-brand-500/20 transition-all disabled:opacity-70 disabled:hover:shadow-md flex justify-center items-center gap-2 min-h-[44px]"
             >
               {loading ? "Menyimpan..." : "Simpan Barang"}
             </button>
@@ -571,7 +589,7 @@ function AddItemForm() {
                   router.refresh();
                 }
               }}
-              className={`w-full py-2.5 rounded-xl font-semibold transition-all shadow-sm ${
+              className={`w-full py-2.5 rounded-xl font-semibold transition-all shadow-sm min-h-[44px] flex items-center justify-center ${
                 notification.type === 'error' 
                   ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-100 shadow-sm' 
                   : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100 shadow-sm'

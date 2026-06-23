@@ -34,6 +34,58 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const body = await request.json();
 
+    // 1. Handle special status RETUR trigger (only sold items can be returned, requires SUPERADMIN)
+    if (body.status === "RETUR") {
+      if (session.role !== "SUPERADMIN") {
+        return NextResponse.json(
+          { success: false, message: "Akses ditolak. Hanya Superadmin yang dapat memproses retur barang." },
+          { status: 403 }
+        );
+      }
+
+      const dbItem = await prisma.auctionItem.findUnique({ where: { id: itemId } });
+      if (!dbItem) {
+        return NextResponse.json({ success: false, message: "Barang tidak ditemukan." }, { status: 404 });
+      }
+      if (dbItem.status !== "Terjual") {
+        return NextResponse.json({ success: false, message: "Hanya barang dengan status TERJUAL yang dapat diretur." }, { status: 400 });
+      }
+
+      // Log: transitioning from Terjual to RETUR
+      console.log(`[STATUS_LOG] Item id ${itemId} status transitioning from Terjual to RETUR`);
+
+      // Update to RETUR
+      await prisma.auctionItem.update({
+        where: { id: itemId },
+        data: { status: "RETUR" },
+      });
+
+      // Deduct revenue by deleting SalesTransaction records for this item
+      const deleteResult = await prisma.salesTransaction.deleteMany({
+        where: { itemId },
+      });
+      console.log(`[REVENUE_LOG] Deleted ${deleteResult.count} sales transactions for item id ${itemId} to deduct revenue.`);
+
+      // Log: transitioning to Tersedia
+      console.log(`[STATUS_LOG] Item id ${itemId} status transitioning from RETUR to Tersedia`);
+
+      // Immediately flag to Tersedia again for re-listing
+      const updatedItem = await prisma.auctionItem.update({
+        where: { id: itemId },
+        data: { status: "Tersedia" },
+      });
+
+      // Purge public catalog cache
+      revalidatePath("/");
+      revalidatePath(`/katalog/${itemId}`);
+
+      return NextResponse.json({
+        success: true,
+        message: "Barang berhasil diretur dan tersedia kembali.",
+        data: JSON.parse(JSON.stringify(updatedItem)),
+      });
+    }
+
     // Determine if this is a visibility-only toggle or a field edit
     const isVisibilityToggleOnly =
       Object.keys(body).length === 1 && "isMarketplaceVisible" in body;
@@ -55,11 +107,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if ("price" in body && !isNaN(Number(body.price))) {
       updateData.price = Number(body.price);
     }
-    if ("status" in body && ["Tersedia", "Dipesan", "Terjual"].includes(body.status)) {
+    if ("status" in body && ["Tersedia", "Dipesan", "Terjual", "RETUR"].includes(body.status)) {
       updateData.status = body.status;
     }
     if ("isMarketplaceVisible" in body && typeof body.isMarketplaceVisible === "boolean") {
       updateData.isMarketplaceVisible = body.isMarketplaceVisible;
+    }
+    if ("hasWarranty" in body && typeof body.hasWarranty === "boolean") {
+      updateData.hasWarranty = body.hasWarranty;
     }
 
     if (Object.keys(updateData).length === 0) {

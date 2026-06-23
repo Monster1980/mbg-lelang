@@ -38,7 +38,8 @@ export async function POST(request: Request) {
         whatsappNumber: body.whatsappNumber,
         youtubeUrl: body.youtubeUrl || null,
         physicalItemId: body.physicalItemId || null,
-        isMarketplaceVisible: body.isMarketplaceVisible !== undefined ? body.isMarketplaceVisible : true,
+        isMarketplaceVisible: false, // FORCED QC STATUS ON CREATION: Force status 'Hidden' upon insertion
+        hasWarranty: body.hasWarranty !== undefined ? body.hasWarranty : false,
       }
     });
 
