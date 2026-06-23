@@ -18,7 +18,15 @@ function AddItemForm() {
   const fromPhysical = searchParams.get("fromPhysical");
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    type: "success" | "error";
+    message: string;
+  }>({
+    isOpen: false,
+    type: "success",
+    message: "",
+  });
   const [compressedImages, setCompressedImages] = useState<CompressedImage[]>([]);
 
   const [physicalItemId, setPhysicalItemId] = useState<string | null>(null);
@@ -41,7 +49,6 @@ function AddItemForm() {
   useEffect(() => {
     if (fromPhysical) {
       setLoading(true);
-      setError("");
       fetch(`/api/admin/gudang?id=${fromPhysical}`)
         .then((res) => res.json())
         .then((resData) => {
@@ -63,11 +70,19 @@ function AddItemForm() {
               kondisi: "Bekas", // Forfeited pawn items are always Bekas
             }));
           } else {
-            setError(resData.message || "Gagal memuat data barang gudang.");
+            setNotification({
+              isOpen: true,
+              type: "error",
+              message: resData.message || "Gagal memuat data barang gudang.",
+            });
           }
         })
         .catch(() => {
-          setError("Gagal menghubungi server untuk memuat data barang.");
+          setNotification({
+            isOpen: true,
+            type: "error",
+            message: "Gagal menghubungi server untuk memuat data barang.",
+          });
         })
         .finally(() => {
           setLoading(false);
@@ -123,7 +138,11 @@ function AddItemForm() {
         });
       } catch (err) {
         console.error("Failed to compress image:", err);
-        setError(`Gagal mengkompres gambar ke-${i + 1}`);
+        setNotification({
+          isOpen: true,
+          type: "error",
+          message: `Gagal mengkompres gambar ke-${i + 1}`,
+        });
       }
     }
 
@@ -139,10 +158,13 @@ function AddItemForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     if (!formData.sku.trim()) {
-      setError("SKU / ID Barang wajib diisi.");
+      setNotification({
+        isOpen: true,
+        type: "error",
+        message: "SKU / ID Barang wajib diisi.",
+      });
       setLoading(false);
       return;
     }
@@ -168,13 +190,24 @@ function AddItemForm() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        router.push("/mbg-internal-portal/items");
-        router.refresh();
+        setNotification({
+          isOpen: true,
+          type: "success",
+          message: "Barang berhasil disimpan ke katalog lelang.",
+        });
       } else {
-        setError(data.message || "Gagal menyimpan barang");
+        setNotification({
+          isOpen: true,
+          type: "error",
+          message: data.message || "Gagal menyimpan barang",
+        });
       }
     } catch (err) {
-      setError("Terjadi kesalahan jaringan");
+      setNotification({
+        isOpen: true,
+        type: "error",
+        message: "Terjadi kesalahan jaringan",
+      });
     } finally {
       setLoading(false);
     }
@@ -206,13 +239,6 @@ function AddItemForm() {
       </div>
 
       <div className="bg-white rounded-2xl p-5 md:p-8 border border-slate-200 shadow-md">
-        {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <p className="font-medium text-sm md:text-base">{error}</p>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* ROW 1 */}
@@ -506,6 +532,56 @@ function AddItemForm() {
           </div>
         </form>
       </div>
+
+      {/* Form Notifications Center Modal */}
+      {notification.isOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className={`max-w-md w-full bg-white rounded-2xl p-6 shadow-2xl border flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200 ${
+            notification.type === 'error' ? 'border-red-100' : 'border-emerald-100'
+          }`}>
+            
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${
+              notification.type === 'error' ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'
+            }`}>
+              {notification.type === 'error' ? (
+                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              ) : (
+                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+
+            <h3 className="text-lg font-bold text-slate-900 mb-2">
+              {notification.type === 'error' ? 'Terjadi Kendala!' : 'Berhasil Disimpan!'}
+            </h3>
+
+            <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+              {notification.message}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                setNotification(prev => ({ ...prev, isOpen: false }));
+                if (notification.type === 'success') {
+                  router.push("/mbg-internal-portal/items");
+                  router.refresh();
+                }
+              }}
+              className={`w-full py-2.5 rounded-xl font-semibold transition-all shadow-sm ${
+                notification.type === 'error' 
+                  ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-100 shadow-sm' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100 shadow-sm'
+              }`}
+            >
+              {notification.type === 'error' ? 'Perbaiki Data' : 'Selesai'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
