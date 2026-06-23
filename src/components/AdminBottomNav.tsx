@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, ScanLine, PackageSearch, BarChart3, ScanBarcode, X, Loader2, AlertCircle } from "lucide-react";
+import { LayoutDashboard, ScanLine, PackageSearch, BarChart3, ScanBarcode, X, Loader2, AlertCircle, Warehouse } from "lucide-react";
 
 type CartItem = {
   id: number;
@@ -32,12 +32,13 @@ export default function AdminBottomNav() {
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
 
   const leftTabs = [
-    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { name: "Semua Barang", href: "/admin/items", icon: PackageSearch },
+    { name: "Dashboard", href: "/mbg-internal-portal", icon: LayoutDashboard },
+    { name: "Semua Barang", href: "/mbg-internal-portal/items", icon: PackageSearch },
   ];
 
   const rightTabs = [
-    { name: "POS Kasir", href: "/admin/kasir", icon: ScanLine },
+    { name: "POS Kasir", href: "/mbg-internal-portal/kasir", icon: ScanLine },
+    { name: "Gudang", href: "/mbg-internal-portal/gudang", icon: Warehouse },
   ];
 
   const startCamera = useCallback(async () => {
@@ -159,7 +160,7 @@ export default function AdminBottomNav() {
         // Close modal and redirect
         stopCamera();
         setIsScannerOpen(false);
-        router.push("/admin/kasir");
+        router.push("/mbg-internal-portal/kasir");
         
       } else {
         setError(data.message || "Barang tidak ditemukan.");
@@ -190,7 +191,7 @@ export default function AdminBottomNav() {
 
   const renderTab = (tab: any) => {
     let isActive = false;
-    if (tab.href === "/admin" || tab.href === "/admin/items") {
+    if (tab.href === "/mbg-internal-portal" || tab.href === "/mbg-internal-portal/items") {
       isActive = pathname === tab.href;
     } else {
       isActive = pathname.startsWith(tab.href);

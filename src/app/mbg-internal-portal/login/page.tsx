@@ -23,7 +23,7 @@ export default function AdminLogin() {
       });
 
       if (res.ok) {
-        router.push("/admin");
+        router.push("/mbg-internal-portal");
         router.refresh();
       } else {
         const data = await res.json();
@@ -53,8 +53,7 @@ export default function AdminLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Masukkan email resmi..."
-              autoComplete="off"
+              placeholder="masukkan email anda..."
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-400 font-medium"
               required
             />
@@ -66,7 +65,6 @@ export default function AdminLogin() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Masukkan password..."
-              autoComplete="new-password"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-400 font-medium"
               required
             />

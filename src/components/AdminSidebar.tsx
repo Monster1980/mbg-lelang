@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, PackageSearch, PlusCircle, LogOut, ScanLine, BarChart3, Users } from "lucide-react";
+import { LayoutDashboard, PackageSearch, PlusCircle, LogOut, ScanLine, BarChart3, Users, Warehouse } from "lucide-react";
 import { Role } from "@prisma/client";
 
 export default function AdminSidebar({ role, userBranch }: { role: Role, userBranch: string }) {
@@ -11,20 +11,21 @@ export default function AdminSidebar({ role, userBranch }: { role: Role, userBra
 
   const handleLogout = async () => {
     await fetch("/api/auth", { method: "DELETE" });
-    router.push("/mbg-auth-pasuruan");
+    router.push("/mbg-internal-portal/login");
     router.refresh();
   };
 
   const menuItems = [
-    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { name: "POS Kasir", href: "/admin/kasir", icon: ScanLine },
-    { name: "Semua Barang", href: "/admin/items", icon: PackageSearch },
-    { name: "Tambah Barang", href: "/admin/items/new", icon: PlusCircle },
-    { name: "Laporan", href: "/admin/reports", icon: BarChart3 },
+    { name: "Dashboard", href: "/mbg-internal-portal", icon: LayoutDashboard },
+    { name: "POS Kasir", href: "/mbg-internal-portal/kasir", icon: ScanLine },
+    { name: "Semua Barang", href: "/mbg-internal-portal/items", icon: PackageSearch },
+    { name: "Tambah Barang", href: "/mbg-internal-portal/items/new", icon: PlusCircle },
+    { name: "Laporan", href: "/mbg-internal-portal/reports", icon: BarChart3 },
+    { name: "Gudang", href: "/mbg-internal-portal/gudang", icon: Warehouse },
   ];
 
   if (role === "SUPERADMIN") {
-    menuItems.push({ name: "Kelola Pengguna", href: "/admin/settings/manage-users", icon: Users });
+    menuItems.push({ name: "Kelola Pengguna", href: "/mbg-internal-portal/settings/manage-users", icon: Users });
   }
 
   return (
@@ -39,7 +40,7 @@ export default function AdminSidebar({ role, userBranch }: { role: Role, userBra
       <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           let isItemActive = false;
-          if (item.href === "/admin" || item.href === "/admin/items") {
+          if (item.href === "/mbg-internal-portal" || item.href === "/mbg-internal-portal/items") {
             isItemActive = pathname === item.href;
           } else {
             isItemActive = pathname.startsWith(item.href);

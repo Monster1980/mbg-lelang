@@ -35,7 +35,7 @@ export default async function SalesReportPage({
 }) {
   const session = await getSession();
   if (!session) {
-    redirect("/mbg-auth-pasuruan");
+    redirect("/mbg-internal-portal/login");
   }
 
   const resolvedParams = await searchParams;

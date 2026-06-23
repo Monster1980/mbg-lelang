@@ -90,7 +90,7 @@ export default function ReportClient({
       params.set("end", endStr);
     }
 
-    router.push(`/admin/reports?${params.toString()}`);
+    router.push(`/mbg-internal-portal/reports?${params.toString()}`);
   };
 
   const handleBranchChange = (newBranch: string) => {

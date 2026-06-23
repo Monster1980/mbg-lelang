@@ -445,7 +445,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                       </button>
                       {/* Print */}
                       <Link
-                        href={`/admin/items/${item.id}`}
+                        href={`/mbg-internal-portal/items/${item.id}`}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
                         title="Detail & Print Barcode"
                       >
@@ -557,7 +557,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                   )}
                 </button>
                 <Link
-                  href={`/admin/items/${item.id}`}
+                  href={`/mbg-internal-portal/items/${item.id}`}
                   className="text-slate-400 hover:text-slate-700 p-1.5 bg-slate-50 rounded-md"
                 >
                   <Printer className="w-4 h-4" />

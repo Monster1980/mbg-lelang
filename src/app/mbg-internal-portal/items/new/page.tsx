@@ -168,7 +168,7 @@ function AddItemForm() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        router.push("/admin/items");
+        router.push("/mbg-internal-portal/items");
         router.refresh();
       } else {
         setError(data.message || "Gagal menyimpan barang");

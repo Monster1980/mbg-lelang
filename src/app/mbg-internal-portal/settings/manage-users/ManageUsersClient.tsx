@@ -66,7 +66,7 @@ export default function ManageUsersClient({ initialUsers }: { initialUsers: User
                 required
                 value={formData.nama_lengkap}
                 onChange={(e) => setFormData({ ...formData, nama_lengkap: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 placeholder="Budi Santoso"
               />
             </div>
@@ -77,7 +77,7 @@ export default function ManageUsersClient({ initialUsers }: { initialUsers: User
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 placeholder="budi@mbg.com"
               />
             </div>
@@ -88,7 +88,7 @@ export default function ManageUsersClient({ initialUsers }: { initialUsers: User
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 placeholder="Minimal 6 karakter"
               />
             </div>
@@ -99,7 +99,7 @@ export default function ManageUsersClient({ initialUsers }: { initialUsers: User
                 required
                 value={formData.asal_cabang}
                 onChange={(e) => setFormData({ ...formData, asal_cabang: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 placeholder="MBG Cabang Pasuruan"
               />
             </div>
@@ -108,7 +108,7 @@ export default function ManageUsersClient({ initialUsers }: { initialUsers: User
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
               >
                 <option value="ADMIN">Admin (Kasir/Staff)</option>
                 <option value="SUPERADMIN">Superadmin (Pemilik)</option>

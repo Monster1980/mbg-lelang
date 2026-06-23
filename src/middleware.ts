@@ -14,19 +14,29 @@ export async function middleware(request: NextRequest) {
     if (!isAuthenticated) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
-  }
-
-  // 2. Protect Admin Web routes
-  if (pathname.startsWith('/admin')) {
-    if (!isAuthenticated) {
-      return NextResponse.redirect(new URL('/mbg-auth-pasuruan', request.url));
+    const role = payload?.role;
+    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
   }
 
-  // 3. Prevent authenticated users from going back to the login page
-  if (pathname === '/mbg-auth-pasuruan') {
-    if (isAuthenticated) {
-      return NextResponse.redirect(new URL('/admin', request.url));
+  // 2. Protect Internal Portal Web routes
+  if (pathname.startsWith('/mbg-internal-portal')) {
+    if (pathname === '/mbg-internal-portal/login') {
+      if (isAuthenticated) {
+        return NextResponse.redirect(new URL('/mbg-internal-portal', request.url));
+      }
+    } else {
+      // Condition A: Unauthenticated
+      if (!isAuthenticated) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+      
+      // Condition B: Authenticated but Wrong Role
+      const role = payload?.role;
+      if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
     }
   }
   
@@ -34,5 +44,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*', '/mbg-auth-pasuruan'],
+  matcher: ['/mbg-internal-portal/:path*', '/api/admin/:path*'],
 };

@@ -14,7 +14,7 @@ export default function AdminItemDetailClient({ item, formattedPrice }: { item: 
     <div className="max-w-4xl mx-auto pb-12 relative">
       {/* Hide this top bar during printing */}
       <div className="flex justify-between items-center mb-8 print:hidden relative z-10">
-        <Link href="/admin/items" className="flex items-center gap-2 text-text-muted hover:text-brand-400 transition-colors">
+        <Link href="/mbg-internal-portal/items" className="flex items-center gap-2 text-text-muted hover:text-brand-400 transition-colors">
           <ArrowLeft className="w-5 h-5" />
           Kembali ke Daftar
         </Link>

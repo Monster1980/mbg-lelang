@@ -29,7 +29,7 @@ export default async function AdminItemsPage() {
           <p className="text-slate-500 mt-1">Daftar semua barang di katalog.</p>
         </div>
         <Link 
-          href="/admin/items/new" 
+          href="/mbg-internal-portal/items/new" 
           className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors font-medium shadow-sm"
         >
           <PlusCircle className="w-5 h-5" />
