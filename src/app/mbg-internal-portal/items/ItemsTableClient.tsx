@@ -49,6 +49,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [editForm, setEditForm] = useState({ title: "", price: "", status: "", hasWarranty: false });
   const [actionLoading, setActionLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [returnConfirm, setReturnConfirm] = useState<{
     isOpen: boolean;
     itemId: number | null;
@@ -283,7 +284,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Barang berhasil diretur and kini tersedia kembali untuk dijual.");
+        setShowSuccessModal(true);
         router.refresh();
       } else {
         alert(data.message || "Gagal memproses retur.");
@@ -886,6 +887,47 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ═══════════ RETURN SUCCESS MODAL ═══════════ */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="max-w-sm w-full bg-white rounded-2xl p-6 shadow-2xl border border-slate-50 flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200">
+            
+            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 scale-0 animate-[scaleIn_0.3s_ease-out_forwards]">
+              <svg className="w-8 h-8 text-emerald-600 stroke-dasharray-[100] stroke-dashoffset-[100] animate-[drawCheck_0.4s_0.2s_ease-out_forwards]" 
+                   fill="none" 
+                   viewBox="0 0 24 24" 
+                   stroke="currentColor" 
+                   strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <h3 className="text-lg font-bold text-slate-900 mb-1">Retur Berhasil!</h3>
+            <p className="text-slate-500 text-sm mb-6 px-2 leading-relaxed">
+              Barang berhasil diretur dan kini otomatis tersedia kembali untuk dijual di katalog.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full py-2.5 rounded-xl font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-100 transition-all active:scale-[0.98] min-h-[44px] flex items-center justify-center"
+            >
+              Selesai
+            </button>
+          </div>
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              @keyframes scaleIn {
+                to { transform: scale(1); }
+              }
+              @keyframes drawCheck {
+                to { stroke-dashoffset: 0; }
+              }
+            `
+          }} />
         </div>
       )}
     </div>
