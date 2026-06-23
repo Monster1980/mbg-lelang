@@ -52,6 +52,7 @@ export default function CatalogView({
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   // Pagination states
   const [loadedItems, setLoadedItems] = useState<AuctionItem[]>(items);
@@ -191,11 +192,13 @@ export default function CatalogView({
   const openModal = (item: AuctionItem) => {
     setSelectedItem(item);
     setCurrentImageIndex(0);
+    setIsVideoPlaying(false);
     document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setSelectedItem(null);
+    setIsVideoPlaying(false);
     document.body.style.overflow = "auto";
   };
 
@@ -204,6 +207,30 @@ export default function CatalogView({
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const youtubeId = selectedItem ? extractYoutubeId(selectedItem.youtubeUrl || (selectedItem as any).video_url || "") : null;
+  const youtubeEmbedUrl = youtubeId ? `https://www.youtube.com/embed/${youtubeId}` : null;
+
+  const slides = useMemo(() => {
+    if (!selectedItem) return [];
+    const list: Array<{ type: "video" | "image"; url: string }> = [];
+    if (youtubeEmbedUrl) {
+      list.push({ type: "video", url: youtubeEmbedUrl });
+    }
+    if (selectedItem.images && selectedItem.images.length > 0) {
+      selectedItem.images.forEach((img) => {
+        list.push({ type: "image", url: img });
+      });
+    }
+    return list;
+  }, [selectedItem, youtubeEmbedUrl]);
+
+  const defectText = selectedItem ? (selectedItem.defects || (selectedItem as any).minus || (selectedItem as any).defect) : null;
+
+  const handleSlideChange = (newIndex: number) => {
+    setCurrentImageIndex(newIndex);
+    setIsVideoPlaying(false);
   };
 
   return (
@@ -400,39 +427,88 @@ export default function CatalogView({
             {/* Content Scroll Area */}
             <div className="overflow-y-auto flex-grow pb-24 sm:pb-6">
               
-              {/* Image Carousel */}
-              <div className="relative aspect-square sm:aspect-video w-full bg-slate-100">
-                {selectedItem.images && selectedItem.images.length > 0 ? (
-                  <>
-                    <Image 
-                      src={selectedItem.images[currentImageIndex]} 
-                      alt={selectedItem.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-contain sm:object-cover"
-                    />
-                    {selectedItem.images.length > 1 && (
+              {/* Image / Video Carousel */}
+              <div className="relative w-full aspect-[4/3] md:aspect-video rounded-t-2xl overflow-hidden bg-slate-100">
+                {slides.length > 0 ? (
+                  <div className="w-full h-full relative">
+                    {/* Slide content */}
+                    {slides[currentImageIndex].type === "video" ? (
+                      <div className="w-full h-full relative bg-black">
+                        {isVideoPlaying ? (
+                          <iframe 
+                            className="absolute inset-0 w-full h-full border-0"
+                            src={`${slides[currentImageIndex].url}?autoplay=1`}
+                            title="Review Video YouTube" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowFullScreen
+                          ></iframe>
+                        ) : (
+                          <div 
+                            className="absolute inset-0 w-full h-full cursor-pointer flex items-center justify-center group"
+                            onClick={() => setIsVideoPlaying(true)}
+                          >
+                            {youtubeId && (
+                              <Image
+                                src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`}
+                                alt="Video thumbnail"
+                                fill
+                                className="object-cover opacity-85 group-hover:scale-105 transition-transform duration-500"
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                                priority
+                              />
+                            )}
+                            {/* Overlay backdrop */}
+                            <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors" />
+                            {/* Play button */}
+                            <div className="relative z-10 w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-xl transform group-hover:scale-110 active:scale-95 transition-all duration-300">
+                              <svg className="w-8 h-8 fill-current ml-1" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                            <span className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 rounded-full text-white text-[10px] sm:text-xs font-bold tracking-wider uppercase backdrop-blur-sm">
+                              Klik untuk putar video
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Image 
+                        src={slides[currentImageIndex].url} 
+                        alt={selectedItem.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-contain sm:object-cover"
+                        priority
+                      />
+                    )}
+
+                    {/* Navigation buttons */}
+                    {slides.length > 1 && (
                       <>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => prev === 0 ? selectedItem.images.length - 1 : prev - 1) }}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 bg-white/80 rounded-full shadow-md text-slate-800 hover:bg-white"
+                          onClick={(e) => { e.stopPropagation(); handleSlideChange(currentImageIndex === 0 ? slides.length - 1 : currentImageIndex - 1) }}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full shadow-md text-slate-800 hover:scale-105 active:scale-95 transition-all z-10"
                         >
                           <ChevronLeft className="w-5 h-5" />
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => prev === selectedItem.images.length - 1 ? 0 : prev + 1) }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-white/80 rounded-full shadow-md text-slate-800 hover:bg-white"
+                          onClick={(e) => { e.stopPropagation(); handleSlideChange(currentImageIndex === slides.length - 1 ? 0 : currentImageIndex + 1) }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full shadow-md text-slate-800 hover:scale-105 active:scale-95 transition-all z-10"
                         >
                           <ChevronRight className="w-5 h-5" />
                         </button>
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                          {selectedItem.images.map((_: string, idx: number) => (
-                            <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentImageIndex ? 'w-4 bg-brand-600' : 'w-1.5 bg-white/60'}`} />
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                          {slides.map((_, idx) => (
+                            <button 
+                              key={idx}
+                              onClick={() => handleSlideChange(idx)}
+                              className={`h-1.5 rounded-full transition-all ${idx === currentImageIndex ? 'w-4 bg-brand-600' : 'w-1.5 bg-white/60 hover:bg-white/80'}`} 
+                            />
                           ))}
                         </div>
                       </>
                     )}
-                  </>
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-400 flex-col gap-2">
                     <Package className="w-12 h-12 opacity-20" />
@@ -468,33 +544,15 @@ export default function CatalogView({
                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Deskripsi Produk</h3>
                   <div className="whitespace-pre-wrap">{selectedItem.description}</div>
                   
-                  {selectedItem.defects && selectedItem.kondisi !== 'Baru' && (
-                    <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                      <h4 className="text-sm font-bold text-amber-900 mb-1 flex items-center gap-1.5">
-                         Kondisi / Minus:
-                      </h4>
-                      <p className="text-sm text-amber-800 m-0">{selectedItem.defects}</p>
+                  {defectText && (
+                    <div className="mt-4">
+                      <h3 className="text-sm font-bold text-rose-600 mt-4 tracking-wide uppercase">MINUS / DEFECT</h3>
+                      <div className="mt-1 p-3 bg-rose-50/60 rounded-xl text-slate-700 text-sm border border-rose-100/50 leading-relaxed">
+                        {defectText}
+                      </div>
                     </div>
                   )}
                 </div>
-
-                {/* YouTube Demo */}
-                {selectedItem.youtubeUrl && extractYoutubeId(selectedItem.youtubeUrl) && (
-                  <div className="mt-6">
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <PlayCircle className="w-4 h-4 text-red-600" /> Video Review / Demo
-                    </h3>
-                    <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 shadow-md">
-                      <iframe 
-                        className="absolute inset-0 w-full h-full"
-                        src={`https://www.youtube.com/embed/${extractYoutubeId(selectedItem.youtubeUrl)}`}
-                        title="YouTube video player" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowFullScreen
-                      ></iframe>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 

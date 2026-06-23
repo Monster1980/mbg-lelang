@@ -49,6 +49,17 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [editForm, setEditForm] = useState({ title: "", price: "", status: "", hasWarranty: false });
   const [actionLoading, setActionLoading] = useState(false);
+  const [returnConfirm, setReturnConfirm] = useState<{
+    isOpen: boolean;
+    itemId: number | null;
+    itemSku: string | null;
+    itemName: string | null;
+  }>({
+    isOpen: false,
+    itemId: null,
+    itemSku: null,
+    itemName: null,
+  });
   const router = useRouter();
 
   // Fetch user role on mount for RBAC
@@ -260,13 +271,10 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
   };
 
   // Return Action Bridge
-  const handleReturnItem = async (item: Item) => {
-    if (!window.confirm(`Apakah Anda yakin ingin memproses retur untuk barang "${item.title}"?`)) {
-      return;
-    }
+  const handleReturnItem = async (itemId: number) => {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/items/${item.id}`, {
+      const res = await fetch(`/api/admin/items/${itemId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -275,7 +283,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Barang berhasil diretur dan kini tersedia kembali untuk dijual.");
+        alert("Barang berhasil diretur and kini tersedia kembali untuk dijual.");
         router.refresh();
       } else {
         alert(data.message || "Gagal memproses retur.");
@@ -493,7 +501,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                       {/* Superadmin: Retur (only for Terjual) */}
                       {isSuperAdmin && item.status === "Terjual" && (
                         <button
-                          onClick={() => handleReturnItem(item)}
+                          onClick={() => setReturnConfirm({ isOpen: true, itemId: item.id, itemSku: item.sku, itemName: item.title })}
                           className="p-1.5 rounded-lg text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                           title="Proses Retur Barang"
                         >
@@ -619,7 +627,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                 {/* Superadmin: Retur (only for Terjual) */}
                 {isSuperAdmin && item.status === "Terjual" && (
                   <button
-                    onClick={() => handleReturnItem(item)}
+                    onClick={() => setReturnConfirm({ isOpen: true, itemId: item.id, itemSku: item.sku, itemName: item.title })}
                     className="text-orange-500 hover:text-orange-700 p-1.5 bg-orange-50 rounded-md min-h-[44px] min-w-[44px] flex items-center justify-center"
                     title="Proses Retur Barang"
                   >
@@ -833,6 +841,48 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 )}
                 Ya, Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ RETURN CONFIRMATION MODAL ═══════════ */}
+      {returnConfirm.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="max-w-md w-full bg-white rounded-2xl p-6 shadow-2xl border border-slate-100 flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-150">
+            
+            <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center mb-4">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Konfirmasi Proses Retur</h3>
+            <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+              Apakah Anda yakin ingin memproses retur untuk barang <span className="font-semibold text-slate-900">&quot;{returnConfirm.itemName}&quot;</span>? Aksi ini akan mengurangi total pendapatan berjalan.
+            </p>
+
+            <div className="w-full grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setReturnConfirm({ isOpen: false, itemId: null, itemSku: null, itemName: null })}
+                className="w-full py-2.5 rounded-xl font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all min-h-[44px] flex items-center justify-center"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={async () => {
+                  if (returnConfirm.itemId !== null) {
+                    await handleReturnItem(returnConfirm.itemId);
+                  }
+                  setReturnConfirm({ isOpen: false, itemId: null, itemSku: null, itemName: null });
+                }}
+                className="w-full py-2.5 rounded-xl font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 transition-all min-h-[44px] flex items-center justify-center disabled:opacity-50"
+              >
+                Oke, Proses
               </button>
             </div>
           </div>

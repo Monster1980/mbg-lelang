@@ -79,7 +79,7 @@ export default async function DetailPage({ params }: Props) {
         <div className="grid md:grid-cols-2 gap-0 sm:gap-8 lg:gap-12">
           {/* Image Slider Component */}
           <div className="w-full">
-            <ImageSlider images={item.images} isUnavailable={isUnavailable} status={item.status} />
+            <ImageSlider images={item.images} isUnavailable={isUnavailable} status={item.status} youtubeUrl={item.youtubeUrl} />
           </div>
 
           {/* Details */}
@@ -124,14 +124,11 @@ export default async function DetailPage({ params }: Props) {
               </div>
 
               {item.defects && (
-                <div className="p-5 rounded-2xl bg-red-50 border border-red-200">
-                  <h3 className="text-xs font-bold text-red-600 mb-2 flex items-center gap-2 uppercase tracking-wider">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    Catatan Minus / Defect
-                  </h3>
-                  <p className="text-red-700 text-sm leading-relaxed">
+                <div>
+                  <h3 className="text-sm font-bold text-rose-600 tracking-wide uppercase">MINUS / DEFECT</h3>
+                  <div className="mt-1 p-3 bg-rose-50/60 rounded-xl text-slate-700 text-sm border border-rose-100/50 leading-relaxed">
                     {item.defects}
-                  </p>
+                  </div>
                 </div>
               )}
             </div>
