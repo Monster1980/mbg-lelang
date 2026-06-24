@@ -53,6 +53,7 @@ export default function CatalogView({
   const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [modalVariants, setModalVariants] = useState<AuctionItem[]>([]);
 
   // Pagination states
   const [loadedItems, setLoadedItems] = useState<AuctionItem[]>(items);
@@ -189,15 +190,34 @@ export default function CatalogView({
     }).format(Number(val));
   };
 
-  const openModal = (item: AuctionItem) => {
+  const openModal = async (item: AuctionItem) => {
     setSelectedItem(item);
     setCurrentImageIndex(0);
     setIsVideoPlaying(false);
+    setModalVariants([]);
     document.body.style.overflow = "hidden";
+
+    const nomInduk = (item as any).nomorInduk;
+    if (nomInduk) {
+      try {
+        const res = await fetch(`/api/items?nomorInduk=${nomInduk}`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          const list = [...data.data];
+          if (!list.some(v => v.id === item.id)) {
+            list.unshift(item);
+          }
+          setModalVariants(list);
+        }
+      } catch (err) {
+        console.error("Gagal memuat varian item:", err);
+      }
+    }
   };
 
   const closeModal = () => {
     setSelectedItem(null);
+    setModalVariants([]);
     setIsVideoPlaying(false);
     document.body.style.overflow = "auto";
   };
@@ -218,10 +238,15 @@ export default function CatalogView({
     if (youtubeEmbedUrl) {
       list.push({ type: "video", url: youtubeEmbedUrl });
     }
-    if (selectedItem.images && selectedItem.images.length > 0) {
+    const varImgUrl = (selectedItem as any).variantImageUrl;
+    if (varImgUrl) {
+      list.push({ type: "image", url: varImgUrl });
+    } else if (selectedItem.images && selectedItem.images.length > 0) {
       selectedItem.images.forEach((img) => {
         list.push({ type: "image", url: img });
       });
+    } else {
+      list.push({ type: "image", url: "https://placehold.co/800x600/1a1a2e/e0e0e0?text=Tanpa+Gambar" });
     }
     return list;
   }, [selectedItem, youtubeEmbedUrl]);
@@ -538,6 +563,51 @@ export default function CatalogView({
                     <MapPin className="w-4 h-4 text-slate-400" /> Tersedia di: <span className="font-semibold text-slate-700">{selectedItem.branchName}</span>
                   </div>
                 </div>
+
+                {/* Grouped Variants Selector Chips */}
+                {modalVariants.length > 1 && (
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-150 shadow-sm">
+                    <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-bold mb-2">
+                      Pilihan Varian Barang
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {modalVariants.map((v) => {
+                        const isActive = selectedItem.id === v.id;
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedItem(v);
+                              setIsVideoPlaying(false);
+                              // Sync active slide index to show the variant image automatically
+                              const varImgUrl = (v as any).variantImageUrl;
+                              if (varImgUrl) {
+                                setCurrentImageIndex(youtubeEmbedUrl ? 1 : 0);
+                              } else {
+                                setCurrentImageIndex(0);
+                              }
+                            }}
+                            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${
+                              isActive
+                                ? "bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20"
+                                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {(v as any).variantImageUrl && (
+                              <img
+                                src={(v as any).variantImageUrl}
+                                alt={v.title}
+                                className="w-5 h-5 rounded-md object-cover border border-black/10"
+                              />
+                            )}
+                            <span>{v.title}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Description */}
                 <div className="prose prose-sm sm:prose-base max-w-none text-slate-600">

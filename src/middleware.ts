@@ -21,7 +21,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 2. Protect Internal Portal Web routes
-  if (pathname.startsWith('/mbg-internal-portal')) {
+  if (pathname.startsWith('/mbg-internal-portal') || pathname.startsWith('/admin')) {
     if (pathname === '/mbg-internal-portal/login') {
       if (isAuthenticated) {
         return NextResponse.redirect(new URL('/mbg-internal-portal', request.url));
@@ -44,5 +44,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/mbg-internal-portal/:path*', '/api/admin/:path*'],
+  matcher: ['/mbg-internal-portal/:path*', '/api/admin/:path*', '/admin/:path*'],
 };

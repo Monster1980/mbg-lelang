@@ -95,7 +95,8 @@ export async function GET(request: Request) {
         item: {
           select: {
             title: true,
-            category: true
+            category: true,
+            nomorInduk: true,
           }
         }
       },
@@ -166,16 +167,52 @@ export async function GET(request: Request) {
       revenue: cashierMap[name]
     }));
 
+    // Fetch variant-specific partial status tracking for the transactions
+    const recentSalesSubset = sales.slice(0, 15);
+    const nomorInduks = Array.from(new Set(recentSalesSubset.map(tx => tx.item?.nomorInduk).filter(Boolean)));
+
+    const groupItems = nomorInduks.length > 0 ? await prisma.auctionItem.findMany({
+      where: {
+        nomorInduk: { in: nomorInduks as string[] }
+      },
+      select: {
+        id: true,
+        parentId: true,
+        nomorInduk: true,
+        status: true,
+      }
+    }) : [];
+
+    const groupStatsMap: { [key: string]: { unsold: number, totalChildren: number } } = {};
+    groupItems.forEach(item => {
+      if (!item.nomorInduk || item.parentId === null) return;
+      if (!groupStatsMap[item.nomorInduk]) {
+        groupStatsMap[item.nomorInduk] = { unsold: 0, totalChildren: 0 };
+      }
+      groupStatsMap[item.nomorInduk].totalChildren += 1;
+      if (item.status !== Status.Terjual) {
+        groupStatsMap[item.nomorInduk].unsold += 1;
+      }
+    });
+
     // 7. Format recent transactions
-    const recentTransactions = sales.slice(0, 15).map(tx => ({
-      id: tx.id,
-      sku: tx.sku,
-      itemTitle: tx.item?.title || "Item Terhapus",
-      transactionDate: tx.transactionDate,
-      cashierName: tx.cashierName,
-      branchName: tx.branchName,
-      soldPrice: Number(tx.soldPrice)
-    }));
+    const recentTransactions = recentSalesSubset.map(tx => {
+      const nomInduk = tx.item?.nomorInduk || null;
+      const stats = nomInduk ? groupStatsMap[nomInduk] : null;
+      const isPartiallySold = stats ? (stats.unsold > 0 && stats.totalChildren > 0) : false;
+      return {
+        id: tx.id,
+        sku: tx.sku,
+        itemTitle: tx.item?.title || "Item Terhapus",
+        transactionDate: tx.transactionDate,
+        cashierName: tx.cashierName,
+        branchName: tx.branchName,
+        soldPrice: Number(tx.soldPrice),
+        isPartiallySold,
+        unsoldChildrenCount: stats ? stats.unsold : 0,
+        totalChildrenCount: stats ? stats.totalChildren : 0,
+      };
+    });
 
     return NextResponse.json({
       success: true,

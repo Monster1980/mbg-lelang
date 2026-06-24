@@ -247,6 +247,11 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
                     <td className="px-6 py-4 text-slate-700 max-w-[200px] truncate">
                       <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-600 mr-1.5">{tx.sku}</span>
                       {tx.itemTitle}
+                      {(tx as any).isPartiallySold && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider animate-pulse">
+                          ⚠️ Belum Lengkap (Kurang {(tx as any).unsoldChildrenCount}/{(tx as any).totalChildrenCount})
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right font-bold text-slate-900">{formatIDR(tx.soldPrice)}</td>
                   </tr>
@@ -272,6 +277,13 @@ export default function AdminDashboardClient({ initialData, initialStartDate, in
                       TX-{String(tx.id).padStart(5, "0")} • {tx.sku}
                     </span>
                     <h3 className="font-bold text-slate-900 text-xs line-clamp-1">{tx.itemTitle}</h3>
+                    {(tx as any).isPartiallySold && (
+                      <div className="mt-1">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
+                          ⚠️ Belum Lengkap (Kurang {(tx as any).unsoldChildrenCount}/{(tx as any).totalChildrenCount})
+                        </span>
+                      </div>
+                    )}
                     <p className="text-[9px] text-slate-500 mt-0.5">
                       {formatDateString(tx.transactionDate)}
                     </p>

@@ -41,12 +41,19 @@ model AuctionItem {
   physicalItemId       String?            @map("physical_item_id")
   isMarketplaceVisible Boolean            @default(true) @map("is_marketplace_visible")
   hasWarranty          Boolean            @default(false) @map("has_warranty")
+  nomorInduk           String?            @map("nomor_induk")
+  parentId             Int?               @map("parent_id")
+  parent               AuctionItem?       @relation("ItemVariants", fields: [parentId], references: [id], onDelete: Cascade)
+  children             AuctionItem[]      @relation("ItemVariants")
+  variantImageUrl      String?            @map("variant_image_url")
+  hargaJual            Decimal?           @map("harga_jual") @db.Decimal(12, 2)
   physicalItem         PhysicalItem?      @relation(fields: [physicalItemId], references: [id])
   transactions         SalesTransaction[]
 
   @@index([status])
   @@index([branchName])
   @@index([category])
+  @@index([nomorInduk])
   @@index([sku(ops: raw("gin_trgm_ops"))], map: "idx_auction_items_sku_trgm", type: Gin)
   @@map("auction_items")
 }

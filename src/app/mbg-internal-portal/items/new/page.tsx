@@ -47,6 +47,66 @@ function AddItemForm() {
     hasWarranty: false,
   });
 
+  type VariantInput = {
+    title: string;
+    hargaJual: string;
+    imageUrl: string;
+    imageName: string;
+  };
+
+  const [variants, setVariants] = useState<VariantInput[]>([]);
+
+  const addVariantRow = () => {
+    setVariants((prev) => [
+      ...prev,
+      { title: "", hargaJual: "", imageUrl: "", imageName: "" },
+    ]);
+  };
+
+  const removeVariantRow = (index: number) => {
+    setVariants((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleVariantChange = (index: number, field: keyof VariantInput, value: string) => {
+    setVariants((prev) =>
+      prev.map((v, i) => (i === index ? { ...v, [field]: value } : v))
+    );
+  };
+
+  const handleVariantImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const options = {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 1024,
+      useWebWorker: true,
+    };
+
+    try {
+      const file = files[0];
+      const compressedFile = await imageCompression(file, options);
+
+      const reader = new FileReader();
+      const result = await new Promise<string>((resolve) => {
+        reader.readAsDataURL(compressedFile);
+        reader.onloadend = () => resolve(reader.result as string);
+      });
+
+      setVariants((prev) =>
+        prev.map((v, i) =>
+          i === index
+            ? { ...v, imageUrl: result, imageName: file.name }
+            : v
+        )
+      );
+    } catch (err) {
+      console.error("Failed to compress variant image:", err);
+      alert("Gagal mengkompres gambar untuk sub-barang.");
+    }
+    e.target.value = "";
+  };
+
   useEffect(() => {
     if (fromPhysical) {
       setLoading(true);
@@ -171,6 +231,10 @@ function AddItemForm() {
     }
 
     try {
+      const cleanPrice = (val: string): number => {
+        return Number(val.replace(/\./g, "")) || 0;
+      };
+
       const payload = {
         ...formData,
         price: getCleanPrice(),
@@ -180,6 +244,11 @@ function AddItemForm() {
         youtubeUrl: formData.youtubeUrl.trim() || null,
         physicalItemId,
         isMarketplaceVisible: false,
+        variants: variants.map((v) => ({
+          title: v.title,
+          price: cleanPrice(v.hargaJual),
+          imageUrl: v.imageUrl || "https://placehold.co/800x600/f1f5f9/94a3b8?text=No+Image",
+        })),
       };
 
       const res = await fetch("/api/items", {
@@ -258,6 +327,77 @@ function AddItemForm() {
                 placeholder="Contoh: 001234"
               />
               <p className="text-xs text-slate-400 mt-1">Harus unik. Hanya angka yang diperbolehkan.</p>
+
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={addVariantRow}
+                  className="px-4 py-2 text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors border border-brand-200"
+                >
+                  [+ Tambah Barang ke Nomor Induk Ini]
+                </button>
+              </div>
+
+              {variants.length > 0 && (
+                <div className="mt-4 space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Daftar Sub-Barang (Varian)</h3>
+                  {variants.map((v, index) => (
+                    <div key={index} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end bg-white p-3 rounded-lg border border-slate-100 shadow-sm relative">
+                      <button
+                        type="button"
+                        onClick={() => removeVariantRow(index)}
+                        className="absolute -top-1.5 -right-1.5 bg-red-100 text-red-600 hover:bg-red-200 p-1 rounded-full border border-red-200"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nama Sub-Barang</label>
+                        <input
+                          type="text"
+                          required
+                          value={v.title}
+                          onChange={(e) => handleVariantChange(index, "title", e.target.value)}
+                          placeholder="Contoh: Sarung Motif A"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-brand-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Harga Jual</label>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-semibold">Rp</span>
+                          <input
+                            type="text"
+                            required
+                            inputMode="numeric"
+                            value={v.hargaJual}
+                            onChange={(e) => handleVariantChange(index, "hargaJual", formatCurrency(e.target.value))}
+                            placeholder="500.000"
+                            className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-brand-500 font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Upload Gambar Khusus Varian</label>
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 text-center cursor-pointer truncate max-w-full">
+                            {v.imageName || "Pilih Gambar"}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              required={!v.imageUrl}
+                              onChange={(e) => handleVariantImageUpload(index, e)}
+                              className="hidden"
+                            />
+                          </label>
+                          {v.imageUrl && (
+                            <img src={v.imageUrl} className="w-8 h-8 object-cover rounded border border-slate-200 shadow-sm" alt="variant preview" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">

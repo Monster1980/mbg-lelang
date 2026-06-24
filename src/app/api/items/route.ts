@@ -22,28 +22,69 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create item with manual SKU
-    const newItem = await prisma.auctionItem.create({
-      data: {
-        sku: trimmedSku,
-        branchName: body.branchName,
-        title: body.title,
-        category: body.category,
-        description: body.description,
-        defects: body.defects || null,
-        kondisi: body.kondisi,
-        price: body.price,
-        status: Status.Tersedia,
-        images: body.images || [],
-        whatsappNumber: body.whatsappNumber,
-        youtubeUrl: body.youtubeUrl || null,
-        physicalItemId: body.physicalItemId || null,
-        isMarketplaceVisible: false, // FORCED QC STATUS ON CREATION: Force status 'Hidden' upon insertion
-        hasWarranty: body.hasWarranty !== undefined ? body.hasWarranty : false,
+    // Create parent and child variants atomically
+    const result = await prisma.$transaction(async (tx) => {
+      // Create parent item
+      const parentItem = await tx.auctionItem.create({
+        data: {
+          sku: trimmedSku,
+          branchName: body.branchName,
+          title: body.title,
+          category: body.category,
+          description: body.description,
+          defects: body.defects || null,
+          kondisi: body.kondisi,
+          price: body.price,
+          status: Status.Tersedia,
+          images: body.images || [],
+          whatsappNumber: body.whatsappNumber,
+          youtubeUrl: body.youtubeUrl || null,
+          physicalItemId: body.physicalItemId || null,
+          isMarketplaceVisible: false,
+          hasWarranty: body.hasWarranty !== undefined ? body.hasWarranty : false,
+          nomorInduk: trimmedSku,
+          parentId: null,
+        }
+      });
+
+      // Create variant children if any
+      const createdVariants = [];
+      if (body.variants && Array.isArray(body.variants)) {
+        for (let idx = 0; idx < body.variants.length; idx++) {
+          const v = body.variants[idx];
+          const variantSku = `${trimmedSku}-${idx + 1}`;
+
+          const childItem = await tx.auctionItem.create({
+            data: {
+              sku: variantSku,
+              branchName: body.branchName,
+              title: v.title,
+              category: body.category,
+              description: body.description,
+              defects: body.defects || null,
+              kondisi: body.kondisi,
+              price: v.price,
+              hargaJual: v.price,
+              status: Status.Tersedia,
+              images: [v.imageUrl],
+              variantImageUrl: v.imageUrl,
+              whatsappNumber: body.whatsappNumber,
+              youtubeUrl: body.youtubeUrl || null,
+              physicalItemId: body.physicalItemId || null,
+              isMarketplaceVisible: false,
+              hasWarranty: body.hasWarranty !== undefined ? body.hasWarranty : false,
+              nomorInduk: trimmedSku,
+              parentId: parentItem.id,
+            }
+          });
+          createdVariants.push(childItem);
+        }
       }
+
+      return { parentItem, variants: createdVariants };
     });
 
-    return NextResponse.json({ success: true, data: newItem });
+    return NextResponse.json({ success: true, data: result.parentItem, variants: result.variants });
   } catch (error: any) {
     console.error("Failed to create item:", error);
 
@@ -66,6 +107,22 @@ export async function GET(request: Request) {
     const skip = parseInt(searchParams.get("skip") || "0");
     const category = searchParams.get("category");
     const searchQuery = searchParams.get("q");
+    const nomorInduk = searchParams.get("nomorInduk");
+
+    if (nomorInduk) {
+      const items = await prisma.auctionItem.findMany({
+        where: {
+          nomorInduk,
+          status: Status.Tersedia,
+          isMarketplaceVisible: true,
+        },
+        orderBy: { id: "asc" },
+      });
+      return NextResponse.json({
+        success: true,
+        data: JSON.parse(JSON.stringify(items)),
+      });
+    }
 
     const where: any = {
       branchName: {
