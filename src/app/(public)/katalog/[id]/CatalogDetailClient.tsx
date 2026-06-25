@@ -63,7 +63,9 @@ export default function CatalogDetailClient({ initialItem, variants }: Props) {
       <div className="px-4 py-4 max-w-5xl mx-auto flex items-center gap-2 text-[11px] font-medium text-slate-500 overflow-x-auto scrollbar-hide whitespace-nowrap">
         <Link href="/" prefetch={true} className="hover:text-brand-600 uppercase tracking-wider">Katalog</Link>
         <span className="opacity-40">/</span>
-        <span className="uppercase tracking-wider">{selectedItem.category}</span>
+        <Link href={`/?category=${selectedItem.category}`}>
+          <span className="hover:text-brand-600 uppercase tracking-wider">{selectedItem.category}</span>
+        </Link>
         <span className="opacity-40">/</span>
         <span className="text-slate-700 truncate">{selectedItem.title}</span>
       </div>
@@ -145,7 +147,9 @@ export default function CatalogDetailClient({ initialItem, variants }: Props) {
             <div className="grid grid-cols-2 gap-4 text-sm bg-white p-4 rounded-2xl mb-8 border border-slate-200 shadow-sm">
               <div>
                 <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-bold mb-1">Kategori</span>
-                <span className="font-semibold text-slate-900">{selectedItem.category}</span>
+                <Link href={`/?category=${selectedItem.category}`}>
+                  <span className="font-semibold text-slate-900 hover:text-brand-600 transition-colors">{selectedItem.category}</span>
+                </Link>
               </div>
               <div>
                 <span className="text-slate-500 block text-[11px] uppercase tracking-wider font-bold mb-1">Lokasi</span>

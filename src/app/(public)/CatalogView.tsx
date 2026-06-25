@@ -4,6 +4,7 @@ import { Status, AuctionItem } from '@prisma/client';
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 import { 
   LayoutGrid, 
@@ -549,9 +550,16 @@ export default function CatalogView({
                     <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-black text-white ${selectedItem.kondisi === 'Baru' ? 'bg-emerald-700' : 'bg-slate-700'}`}>
                       {selectedItem.kondisi === 'Baru' ? 'Baru' : 'Bekas'}
                     </span>
-                    <span className="px-2.5 py-1 rounded-md text-[10px] uppercase font-black bg-brand-100 text-brand-700">
+                    <Link 
+                      href={`/?category=${selectedItem.category}`}
+                      onClick={(e) => {
+                        handleCategoryClick(selectedItem.category);
+                        closeModal();
+                      }}
+                      className="px-2.5 py-1 rounded-md text-[10px] uppercase font-black bg-brand-100 text-brand-700 hover:bg-brand-200 transition-colors"
+                    >
                       {selectedItem.category}
-                    </span>
+                    </Link>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
                     {selectedItem.title}
