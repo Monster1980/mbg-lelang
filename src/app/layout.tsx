@@ -36,6 +36,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className={inter.variable}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window !== 'undefined' && !window.fetch.__patched) {
+                  const originalFetch = window.fetch;
+                  window.fetch = function(input, init) {
+                    if (typeof input === 'string' && input.startsWith('/api/')) {
+                      input = '/lelang' + input;
+                    }
+                    return originalFetch(input, init);
+                  };
+                  window.fetch.__patched = true;
+                }
+              })();
+            `
+          }}
+        />
+      </head>
       <body className="flex flex-col min-h-screen">
         {children}
       </body>

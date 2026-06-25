@@ -10,7 +10,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-20 gap-4">
           <Link href="/" className="flex items-center flex-shrink-0">
             <Image 
-              src="/logo.png" 
+              src="/lelang/logo.png" 
               alt="MBG Logo" 
               width={200} 
               height={80} 

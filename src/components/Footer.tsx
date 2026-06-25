@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
         <div className="mb-6 flex justify-center">
           <Image 
-            src="/logo.png" 
+            src="/lelang/logo.png" 
             alt="MBG Logo" 
             width={240} 
             height={100} 

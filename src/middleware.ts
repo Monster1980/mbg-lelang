@@ -24,18 +24,24 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/mbg-internal-portal') || pathname.startsWith('/admin')) {
     if (pathname === '/mbg-internal-portal/login') {
       if (isAuthenticated) {
-        return NextResponse.redirect(new URL('/mbg-internal-portal', request.url));
+        const url = request.nextUrl.clone();
+        url.pathname = '/mbg-internal-portal';
+        return NextResponse.redirect(url);
       }
     } else {
       // Condition A: Unauthenticated
       if (!isAuthenticated) {
-        return NextResponse.redirect(new URL('/', request.url));
+        const url = request.nextUrl.clone();
+        url.pathname = '/';
+        return NextResponse.redirect(url);
       }
       
       // Condition B: Authenticated but Wrong Role
       const role = payload?.role;
       if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
-        return NextResponse.redirect(new URL('/', request.url));
+        const url = request.nextUrl.clone();
+        url.pathname = '/';
+        return NextResponse.redirect(url);
       }
     }
   }

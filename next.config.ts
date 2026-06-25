@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  basePath: '/lelang',
   serverExternalPackages: ["exceljs"],
   images: {
     dangerouslyAllowSVG: true,
