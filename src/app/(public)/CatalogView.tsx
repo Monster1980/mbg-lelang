@@ -2,7 +2,7 @@
 import { Status, AuctionItem } from '@prisma/client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -49,6 +49,7 @@ export default function CatalogView({
   initialSearchQuery,
 }: CatalogViewProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
@@ -180,7 +181,7 @@ export default function CatalogView({
     } else {
       params.set("category", category);
     }
-    router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const formatIDR = (val: any) => {
