@@ -115,7 +115,8 @@ export default function ReportClient({
       params.set("start", startStr);
       params.set("end", endStr);
     }
-    const url = `/api/admin/reports/export?${params.toString()}`;
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '/lelang';
+    const url = `${basePath}/api/admin/reports/export?${params.toString()}`;
     console.log("Triggering download via anchor for: ", url);
     
     // Create a temporary anchor element to trigger the download and bypass any client-side routing
