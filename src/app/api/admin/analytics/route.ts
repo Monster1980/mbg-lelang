@@ -82,13 +82,14 @@ export async function GET(request: Request) {
       }
     } : {};
 
-    // 2. Fetch sales transactions in date range
+    // 2. Fetch sales transactions in date range (excluding returned transactions)
     const sales = await prisma.salesTransaction.findMany({
       where: {
         branchName: {
           contains: "Pasuruan",
           mode: "insensitive" as const
         },
+        isReturned: false,
         ...dateFilter
       },
       include: {

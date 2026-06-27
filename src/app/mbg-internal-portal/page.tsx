@@ -63,7 +63,8 @@ async function DashboardData() {
         branchName: {
           contains: "Pasuruan",
           mode: "insensitive" as const
-        }
+        },
+        isReturned: false
       },
       include: {
         item: {
