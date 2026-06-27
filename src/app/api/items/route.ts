@@ -1,6 +1,8 @@
 import { Status } from '@prisma/client';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
+import { logActivity } from "@/lib/audit";
 
 export async function POST(request: Request) {
   try {
@@ -82,6 +84,16 @@ export async function POST(request: Request) {
       }
 
       return { parentItem, variants: createdVariants };
+    });
+
+    const session = await getSession();
+    const adminEmail = session?.email || "system@mbg.co.id";
+    await logActivity({
+      adminEmail,
+      eventType: "Barang Masuk",
+      productSku: result.parentItem.sku,
+      productName: result.parentItem.title,
+      description: `Menambahkan barang baru dengan SKU ${result.parentItem.sku}${result.variants.length > 0 ? ` serta ${result.variants.length} sub-barang (varian)` : ''}.`,
     });
 
     return NextResponse.json({ success: true, data: result.parentItem, variants: result.variants });

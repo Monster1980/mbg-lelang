@@ -20,7 +20,12 @@ import {
   X,
   Loader2,
   ShieldAlert,
+  UploadCloud,
+  Video,
+  QrCode,
 } from "lucide-react";
+import imageCompression from "browser-image-compression";
+import { QRCodeSVG } from "qrcode.react";
 
 type Item = {
   id: number;
@@ -44,12 +49,12 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", price: "", status: "", hasWarranty: false });
   const [actionLoading, setActionLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // Return reason states
   const [returnConfirm, setReturnConfirm] = useState<{
     isOpen: boolean;
     itemId: number | null;
@@ -61,6 +66,14 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
     itemSku: null,
     itemName: null,
   });
+  const [returnReasonText, setReturnReasonText] = useState("");
+
+  // Full form edit states
+  const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [editPriceText, setEditPriceText] = useState("");
+  const [compressedImages, setCompressedImages] = useState<any[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
   const router = useRouter();
 
   // Fetch user role on mount for RBAC
@@ -204,38 +217,60 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
     }
   };
 
-  const openEditModal = (item: Item) => {
+  // Full Edit Form API operations
+  const openEditForm = async (item: Item) => {
     setSelectedItem(item);
-    setEditForm({
-      title: item.title,
-      price: formatRupiahMask(String(item.price)),
-      status: item.status,
-      hasWarranty: !!item.hasWarranty,
-    });
-    setEditModalOpen(true);
+    setLoadingDetail(true);
+    try {
+      const res = await fetch(`/api/admin/items/${item.id}`);
+      const resData = await res.json();
+      if (resData.success && resData.data) {
+        setEditingItem(resData.data);
+        setEditPriceText(formatRupiahMask(String(resData.data.price)));
+        setCompressedImages(resData.data.images.map((url: string) => ({ url })));
+      } else {
+        alert(resData.message || "Gagal memuat detail barang.");
+      }
+    } catch (err) {
+      alert("Terjadi kesalahan jaringan.");
+    } finally {
+      setLoadingDetail(false);
+    }
   };
 
-  const handleEditSubmit = async () => {
-    if (!selectedItem) return;
+  const handleEditFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/items/${selectedItem.id}`, {
-        method: "PATCH",
+      const rawPrice = parseRupiahMask(editPriceText);
+      const payload = {
+        sku: editingItem.sku,
+        title: editingItem.title,
+        category: editingItem.category,
+        kondisi: editingItem.kondisi,
+        price: rawPrice,
+        whatsappNumber: editingItem.whatsappNumber,
+        youtubeUrl: editingItem.youtubeUrl,
+        hasWarranty: editingItem.hasWarranty,
+        description: editingItem.description,
+        defects: editingItem.defects,
+        images: compressedImages.map((img: any) => img.url),
+      };
+
+      const res = await fetch(`/api/admin/items/${editingItem.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: editForm.title,
-          price: parseRupiahMask(editForm.price),
-          status: editForm.status,
-          hasWarranty: editForm.hasWarranty,
-        }),
+        body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (data.success) {
-        setEditModalOpen(false);
+
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        setEditingItem(null);
         setSelectedItem(null);
         router.refresh();
       } else {
-        alert(data.message || "Gagal memperbarui barang.");
+        alert(resData.message || "Gagal menyimpan perubahan barang.");
       }
     } catch (err) {
       alert("Terjadi kesalahan jaringan.");
@@ -271,6 +306,16 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
     }
   };
 
+  const openReturnConfirm = (item: Item) => {
+    setReturnReasonText("");
+    setReturnConfirm({
+      isOpen: true,
+      itemId: item.id,
+      itemSku: item.sku,
+      itemName: item.title,
+    });
+  };
+
   // Return Action Bridge
   const handleReturnItem = async (itemId: number) => {
     setActionLoading(true);
@@ -280,6 +325,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: "RETUR",
+          returnReason: returnReasonText,
         }),
       });
       const data = await res.json();
@@ -348,6 +394,342 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
       </div>
     );
   };
+
+  // ─── FULL EDIT FORM RENDER ───
+  if (editingItem) {
+    const inputClassName =
+      "w-full bg-white border border-slate-300 rounded-xl px-4 py-3 md:py-2.5 min-h-[44px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-sm text-base md:text-sm";
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const options = {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1024,
+        useWebWorker: true,
+      };
+
+      const newImages: any[] = [];
+      for (let i = 0; i < files.length; i++) {
+        try {
+          const file = files[i];
+          const compressedFile = await imageCompression(file, options);
+          const reader = new FileReader();
+          const result = await new Promise<string>((resolve) => {
+            reader.readAsDataURL(compressedFile);
+            reader.onloadend = () => resolve(reader.result as string);
+          });
+          newImages.push({ url: result });
+        } catch (err) {
+          console.error("Failed to compress image:", err);
+        }
+      }
+      setCompressedImages((prev) => [...prev, ...newImages]);
+      e.target.value = "";
+    };
+
+    const removeImage = (idx: number) => {
+      setCompressedImages((prev) => prev.filter((_, i) => i !== idx));
+    };
+
+    return (
+      <div className="max-w-5xl mx-auto space-y-6 pb-12 animate-in fade-in duration-200">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Edit Detail Barang</h1>
+          <p className="text-sm md:text-base text-slate-500 mt-1">
+            Ubah detail spesifikasi barang lelang atau preloved katalog secara lengkap.
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 md:p-8 border border-slate-200 shadow-md">
+          <form onSubmit={handleEditFormSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {/* SKU */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Nomor SKU Barang <span className="text-red-500">*</span>
+                </label>
+                <input
+                  required
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={editingItem.sku}
+                  onChange={(e) => setEditingItem({ ...editingItem, sku: e.target.value.replace(/\D/g, "") })}
+                  className={inputClassName}
+                  placeholder="Contoh: 001234"
+                />
+                <p className="text-xs text-slate-400 mt-1">Harus unik. Hanya angka yang diperbolehkan.</p>
+              </div>
+
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Nama Barang <span className="text-red-500">*</span>
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={editingItem.title}
+                  onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                  className={inputClassName}
+                  placeholder="Contoh: iPhone 13 Pro Max"
+                />
+              </div>
+
+              {/* Kategori */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Kategori</label>
+                <select
+                  value={editingItem.category}
+                  onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                  className={inputClassName}
+                >
+                  <option>Elektronik</option>
+                  <option>Gerabahan</option>
+                  <option>Kendaraan</option>
+                </select>
+              </div>
+
+              {/* Kondisi */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Status Kondisi Barang</label>
+                <div className="flex gap-3 h-12 md:h-11">
+                  <button
+                    type="button"
+                    onClick={() => setEditingItem({ ...editingItem, kondisi: "Baru" })}
+                    className={`flex-1 px-4 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
+                      editingItem.kondisi === "Baru"
+                        ? "border-green-500 bg-green-50 text-green-700 ring-2 ring-green-500/20"
+                        : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
+                    }`}
+                  >
+                    ✨ Baru
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingItem({ ...editingItem, kondisi: "Bekas" })}
+                    className={`flex-1 px-4 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm ${
+                      editingItem.kondisi === "Bekas"
+                        ? "border-slate-700 bg-slate-100 text-slate-800 ring-2 ring-slate-500/20"
+                        : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
+                    }`}
+                  >
+                    ♻️ Bekas
+                  </button>
+                </div>
+              </div>
+
+              {/* Harga Jual */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Harga Jual (Rp) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">Rp</span>
+                  <input
+                    required
+                    type="text"
+                    inputMode="numeric"
+                    value={editPriceText}
+                    onChange={(e) => setEditPriceText(formatRupiahMask(e.target.value))}
+                    className={`${inputClassName} pl-10`}
+                    placeholder="5.000.000"
+                  />
+                </div>
+                <p className="text-xs text-slate-400 mt-1">Ketik angka, titik pemisah ribuan otomatis muncul.</p>
+              </div>
+
+              {/* WhatsApp CS */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Nomor WhatsApp CS <span className="text-red-500">*</span>
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={editingItem.whatsappNumber}
+                  onChange={(e) => setEditingItem({ ...editingItem, whatsappNumber: e.target.value })}
+                  className={inputClassName}
+                  placeholder="628..."
+                />
+              </div>
+
+              {/* Lokasi Cabang */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Lokasi Cabang</label>
+                <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 md:py-2.5 text-slate-500 text-base md:text-sm font-medium flex items-center gap-2 cursor-not-allowed shadow-sm">
+                  <span className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0"></span>
+                  <span className="truncate">{editingItem.branchName} (Terkunci)</span>
+                </div>
+              </div>
+
+              {/* YouTube Link */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Video className="w-4 h-4 text-red-500 shrink-0" />
+                  Link Video Demo YouTube (Opsional)
+                </label>
+                <input
+                  type="url"
+                  value={editingItem.youtubeUrl || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, youtubeUrl: e.target.value })}
+                  className={inputClassName}
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+              </div>
+
+              {/* Warranty */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Garansi</label>
+                <div className="flex items-center gap-3 bg-white border border-slate-300 rounded-xl px-4 py-3 min-h-[44px] shadow-sm">
+                  <input
+                    type="checkbox"
+                    id="editHasWarranty"
+                    checked={!!editingItem.hasWarranty}
+                    onChange={(e) => setEditingItem({ ...editingItem, hasWarranty: e.target.checked })}
+                    className="w-5 h-5 text-brand-600 border-slate-300 rounded focus:ring-brand-500 transition-all cursor-pointer"
+                  />
+                  <label htmlFor="editHasWarranty" className="text-sm font-semibold text-slate-700 cursor-pointer select-none">
+                    🛡️ Memiliki Garansi Resmi MBG
+                  </label>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Deskripsi / Spesifikasi <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  required
+                  rows={5}
+                  value={editingItem.description}
+                  onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                  className={inputClassName}
+                  placeholder="Spesifikasi, kelengkapan, dan informasi penting untuk pembeli..."
+                />
+              </div>
+
+              {/* Defects */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Minus / Defect (Opsional)
+                </label>
+                <textarea
+                  rows={5}
+                  value={editingItem.defects || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, defects: e.target.value })}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 md:py-2.5 min-h-[44px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all shadow-sm text-base md:text-sm"
+                  placeholder="Catat jika ada lecet, kerusakan kecil, dll."
+                />
+              </div>
+            </div>
+
+            {/* Images upload */}
+            <div className="border-t border-slate-200 pt-6 mt-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                Upload Gambar Marketplace (Wajib Upload Manual)
+              </label>
+
+              <div className="space-y-4">
+                <label className="flex flex-col items-center justify-center w-full h-40 md:h-36 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-brand-500 transition-all">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <UploadCloud className="w-10 h-10 text-slate-400 mb-2" />
+                    <p className="text-sm text-slate-600 text-center px-4">
+                      <span className="font-semibold text-brand-600">Klik untuk upload gambar baru</span> (bisa pilih banyak)
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">Maks. 5MB per file, format JPG/PNG</p>
+                  </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                  />
+                </label>
+
+                {compressedImages.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-slate-700">
+                      {compressedImages.length} gambar terpilih
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                      {compressedImages.map((img, idx) => (
+                        <div
+                          key={idx}
+                          className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100 aspect-square"
+                        >
+                          <img
+                            src={img.url}
+                            alt={`Preview ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute top-2 right-2 w-8 h-8 md:w-6 md:h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md transition-opacity"
+                          >
+                            <X className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="border-t border-slate-200 pt-6 mt-2 flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
+              {editingItem.sku?.trim() && (
+                <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm w-full md:w-auto">
+                  <div className="bg-white p-2 rounded-lg border border-slate-100 shrink-0">
+                    <QRCodeSVG
+                      value={editingItem.sku.trim()}
+                      size={64}
+                      level="M"
+                      bgColor="#ffffff"
+                      fgColor="#0f172a"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1">
+                      <QrCode className="w-3.5 h-3.5" /> QR Code Preview
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-mono break-all line-clamp-1">{editingItem.sku.trim()}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 w-full md:w-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setSelectedItem(null);
+                  }}
+                  disabled={actionLoading}
+                  className="w-full md:w-auto px-6 py-3 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-semibold min-h-[44px] flex items-center justify-center"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading || !editingItem.title?.trim() || !editPriceText}
+                  className="w-full md:w-auto px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-70 flex justify-center items-center gap-2 min-h-[44px]"
+                >
+                  {actionLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -502,7 +884,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                       {/* Superadmin: Retur (only for Terjual) */}
                       {isSuperAdmin && item.status === "Terjual" && (
                         <button
-                          onClick={() => setReturnConfirm({ isOpen: true, itemId: item.id, itemSku: item.sku, itemName: item.title })}
+                          onClick={() => openReturnConfirm(item)}
                           className="p-1.5 rounded-lg text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                           title="Proses Retur Barang"
                         >
@@ -514,11 +896,16 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                       {/* Superadmin: Edit */}
                       {isSuperAdmin && (
                         <button
-                          onClick={() => openEditModal(item)}
+                          onClick={() => openEditForm(item)}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                           title="Edit Barang"
+                          disabled={loadingDetail}
                         >
-                          <Pencil className="w-4 h-4" />
+                          {loadingDetail && selectedItem?.id === item.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                          ) : (
+                            <Pencil className="w-4 h-4" />
+                          )}
                         </button>
                       )}
                       {/* Superadmin: Delete */}
@@ -628,7 +1015,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                 {/* Superadmin: Retur (only for Terjual) */}
                 {isSuperAdmin && item.status === "Terjual" && (
                   <button
-                    onClick={() => setReturnConfirm({ isOpen: true, itemId: item.id, itemSku: item.sku, itemName: item.title })}
+                    onClick={() => openReturnConfirm(item)}
                     className="text-orange-500 hover:text-orange-700 p-1.5 bg-orange-50 rounded-md min-h-[44px] min-w-[44px] flex items-center justify-center"
                     title="Proses Retur Barang"
                   >
@@ -639,10 +1026,15 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                 )}
                 {isSuperAdmin && (
                   <button
-                    onClick={() => openEditModal(item)}
+                    onClick={() => openEditForm(item)}
                     className="text-slate-400 hover:text-blue-600 p-1.5 bg-slate-50 rounded-md min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    disabled={loadingDetail}
                   >
-                    <Pencil className="w-4 h-4" />
+                    {loadingDetail && selectedItem?.id === item.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                    ) : (
+                      <Pencil className="w-4 h-4" />
+                    )}
                   </button>
                 )}
                 {isSuperAdmin && (
@@ -671,125 +1063,6 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
 
       {/* ═══════════ Pagination ═══════════ */}
       <PaginationBar />
-
-      {/* ═══════════ EDIT MODAL ═══════════ */}
-      {editModalOpen && selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => !actionLoading && setEditModalOpen(false)}
-          />
-          {/* Modal Card */}
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 animate-in fade-in zoom-in-95">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Pencil className="w-4 h-4 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  Edit Barang
-                </h3>
-              </div>
-              <button
-                onClick={() => !actionLoading && setEditModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            {/* Body */}
-            <div className="px-6 py-5 space-y-4">
-              <div className="bg-slate-50 rounded-lg px-3 py-2 text-xs text-slate-500 font-mono">
-                SKU: {selectedItem.sku}
-              </div>
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Nama Barang
-                </label>
-                <input
-                  type="text"
-                  value={editForm.title}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, title: e.target.value }))
-                  }
-                  className="w-full border border-slate-300 rounded-xl px-4 py-2.5 min-h-[44px] text-sm text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                />
-              </div>
-              {/* Price */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Harga (Rp)
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={editForm.price}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, price: formatRupiahMask(e.target.value) }))
-                  }
-                  placeholder="0"
-                  className="w-full border border-slate-300 rounded-xl px-4 py-2.5 min-h-[44px] text-sm text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-              </div>
-              {/* Status */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Status
-                </label>
-                <select
-                  value={editForm.status}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, status: e.target.value }))
-                  }
-                  className="w-full border border-slate-300 rounded-xl px-4 py-2.5 min-h-[44px] text-sm text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all bg-white"
-                >
-                  <option value="Tersedia">Tersedia</option>
-                  <option value="Dipesan">Dipesan</option>
-                  <option value="Terjual">Terjual</option>
-                </select>
-              </div>
-              {/* Warranty */}
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="editHasWarranty"
-                  checked={editForm.hasWarranty}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, hasWarranty: e.target.checked }))
-                  }
-                  className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="editHasWarranty" className="text-sm font-semibold text-slate-700">
-                  🛡️ Memiliki Garansi Resmi MBG
-                </label>
-              </div>
-            </div>
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
-              <button
-                onClick={() => setEditModalOpen(false)}
-                disabled={actionLoading}
-                className="px-4 py-2.5 min-h-[44px] text-sm font-medium text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition-all disabled:opacity-50 flex items-center justify-center"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleEditSubmit}
-                disabled={actionLoading || !editForm.title.trim() || !editForm.price}
-                className="flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {actionLoading && (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                )}
-                Simpan Perubahan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ═══════════ DELETE MODAL ═══════════ */}
       {deleteModalOpen && selectedItem && (
@@ -860,9 +1133,25 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
             </div>
 
             <h3 className="text-lg font-bold text-slate-900 mb-2">Konfirmasi Proses Retur</h3>
-            <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+            <p className="text-slate-600 text-sm mb-4 leading-relaxed">
               Apakah Anda yakin ingin memproses retur untuk barang <span className="font-semibold text-slate-900">&quot;{returnConfirm.itemName}&quot;</span>? Aksi ini akan mengurangi total pendapatan berjalan.
             </p>
+
+            {/* Mandated Return Reason Input */}
+            <div className="w-full text-left mb-5">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Alasan Barang Diretur <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                required
+                rows={3}
+                value={returnReasonText}
+                onChange={(e) => setReturnReasonText(e.target.value)}
+                placeholder="Contoh: Barang cacat tombol volume macet, customer meminta pembatalan transaksi."
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm leading-relaxed"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">Alasan wajib diisi untuk mendokumentasikan retur.</p>
+            </div>
 
             <div className="w-full grid grid-cols-2 gap-3">
               <button
@@ -874,15 +1163,16 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
               </button>
               <button
                 type="button"
-                disabled={actionLoading}
+                disabled={actionLoading || !returnReasonText.trim()}
                 onClick={async () => {
                   if (returnConfirm.itemId !== null) {
                     await handleReturnItem(returnConfirm.itemId);
                   }
                   setReturnConfirm({ isOpen: false, itemId: null, itemSku: null, itemName: null });
                 }}
-                className="w-full py-2.5 rounded-xl font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 transition-all min-h-[44px] flex items-center justify-center disabled:opacity-50"
+                className="w-full py-2.5 rounded-xl font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 transition-all min-h-[44px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
+                {actionLoading && <Loader2 className="w-4 h-4 animate-spin mr-1.5" />}
                 Oke, Proses
               </button>
             </div>

@@ -101,6 +101,8 @@ export async function GET(request: Request) {
       { header: "Cabang", key: "cabang", width: 20 },
       { header: "Kasir", key: "kasir", width: 20 },
       { header: "Harga Terjual", key: "hargaTerjual", width: 20 },
+      { header: "Status Transaksi", key: "statusTransaksi", width: 18 },
+      { header: "Alasan Retur", key: "alasanRetur", width: 30 },
     ];
 
     // Style the Header Row cells: Bright Yellow fill (#FFFF00) and bold text
@@ -131,18 +133,20 @@ export async function GET(request: Request) {
         cabang: tx.branchName,
         kasir: tx.cashierName,
         hargaTerjual: Number(tx.soldPrice),
+        statusTransaksi: tx.isReturned ? "RETUR" : "SUKSES",
+        alasanRetur: tx.isReturned ? (tx.returnReason || "Tidak ada alasan") : "-",
       });
     });
 
     // Format the number format for "Harga Terjual" column (column 8)
     worksheet.getColumn(8).numFmt = '#,##0';
 
-    // Calculate sum of Harga Terjual
-    const totalRevenue = transactions.reduce((sum, tx) => sum + Number(tx.soldPrice), 0);
+    // Calculate sum of Harga Terjual (excluding returned transactions)
+    const totalRevenue = transactions.reduce((sum, tx) => sum + (tx.isReturned ? 0 : Number(tx.soldPrice)), 0);
 
     // Append a dedicated Summary Row at the bottom
     const summaryRow = worksheet.addRow({
-      kasir: "Total",
+      kasir: "Total Pendapatan Bersih",
       hargaTerjual: totalRevenue,
     });
 

@@ -2,6 +2,7 @@ import { Status } from '@prisma/client';
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/audit";
 
 export async function POST(request: Request) {
   try {
@@ -62,6 +63,17 @@ export async function POST(request: Request) {
 
       return results;
     });
+
+    // Log audit activity for each item checked out
+    for (const res of result) {
+      await logActivity({
+        adminEmail: res.salesTx.cashierName,
+        eventType: "Barang Terjual",
+        productSku: res.salesTx.sku,
+        productName: res.updatedItem.title,
+        description: `Barang terjual via POS Kasir oleh ${res.salesTx.cashierName} dengan harga ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(res.salesTx.soldPrice))}.`,
+      });
+    }
 
     // Purge public catalog cache so sold items disappear instantly
     revalidatePath("/");

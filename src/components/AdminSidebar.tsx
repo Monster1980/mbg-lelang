@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, PackageSearch, PlusCircle, LogOut, ScanLine, BarChart3, Users } from "lucide-react";
+import { LayoutDashboard, PackageSearch, PlusCircle, LogOut, ScanLine, BarChart3, Users, History } from "lucide-react";
 import { Role } from "@prisma/client";
 
 export default function AdminSidebar({ role, userBranch }: { role: Role, userBranch: string }) {
@@ -21,6 +21,7 @@ export default function AdminSidebar({ role, userBranch }: { role: Role, userBra
     { name: "Semua Barang", href: "/mbg-internal-portal/items", icon: PackageSearch },
     { name: "Tambah Barang", href: "/mbg-internal-portal/items/new", icon: PlusCircle },
     { name: "Laporan", href: "/mbg-internal-portal/reports", icon: BarChart3 },
+    { name: "Log Aktivitas", href: "/mbg-internal-portal/log-aktivitas", icon: History },
   ];
 
   if (role === "SUPERADMIN") {

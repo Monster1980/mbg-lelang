@@ -49,6 +49,7 @@ model AuctionItem {
   hargaJual            Decimal?           @map("harga_jual") @db.Decimal(12, 2)
   physicalItem         PhysicalItem?      @relation(fields: [physicalItemId], references: [id])
   transactions         SalesTransaction[]
+  returnReason         String?            @map("return_reason")
 
   @@index([status])
   @@index([branchName])
@@ -68,6 +69,8 @@ model SalesTransaction {
   cashierName     String      @map("cashier_name")
   transactionDate DateTime    @default(now()) @map("transaction_date")
   item            AuctionItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  isReturned      Boolean     @default(false) @map("is_returned")
+  returnReason    String?     @map("return_reason")
 
   @@index([transactionDate])
   @@index([branchName])
@@ -152,4 +155,19 @@ enum Status {
   Dipesan
   Terjual
   RETUR
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now()) @map("created_at")
+  adminEmail  String   @map("admin_email")
+  eventType   String   @map("event_type")
+  productSku  String   @map("product_sku")
+  productName String   @map("product_name")
+  description String
+
+  @@index([createdAt])
+  @@index([adminEmail])
+  @@index([eventType])
+  @@map("audit_logs")
 }

@@ -38,6 +38,8 @@ type Transaction = {
     title: string;
     category: string;
   };
+  isReturned: boolean;
+  returnReason?: string;
 };
 
 type Props = {
@@ -134,7 +136,10 @@ export default function ReportClient({
     );
   };
 
-  const totalRevenue = initialTransactions.reduce((acc, tx) => acc + Number(tx.soldPrice), 0);
+  // Exclude returned transaction prices from the total revenue
+  const totalRevenue = initialTransactions.reduce((acc, tx) => acc + (tx.isReturned ? 0 : Number(tx.soldPrice)), 0);
+  const activeTxCount = initialTransactions.filter(tx => !tx.isReturned).length;
+  const returnedTxCount = initialTransactions.filter(tx => tx.isReturned).length;
 
   return (
     <div className="space-y-6">
@@ -184,11 +189,11 @@ export default function ReportClient({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-sm text-slate-600 font-bold tracking-wider uppercase mb-1">Total Transaksi</p>
-            <h3 className="text-3xl font-black text-slate-900">{initialTransactions.length}</h3>
+            <h3 className="text-3xl font-black text-slate-900">{activeTxCount}</h3>
           </div>
           <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
             <span className="text-2xl">🛍️</span>
@@ -196,11 +201,20 @@ export default function ReportClient({
         </div>
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-600 font-bold tracking-wider uppercase mb-1">Total Pendapatan (Filtered)</p>
+            <p className="text-sm text-slate-600 font-bold tracking-wider uppercase mb-1">Pendapatan Bersih</p>
             <h3 className="text-3xl font-black text-slate-900">{formatIDR(totalRevenue)}</h3>
           </div>
           <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center border border-green-100">
             <span className="text-2xl">💰</span>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-sm text-slate-600 font-bold tracking-wider uppercase mb-1">Transaksi Retur</p>
+            <h3 className="text-3xl font-black text-slate-900">{returnedTxCount}</h3>
+          </div>
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center border border-red-100">
+            <span className="text-2xl">🔄</span>
           </div>
         </div>
       </div>
@@ -219,7 +233,7 @@ export default function ReportClient({
             </thead>
             <tbody className="divide-y divide-slate-100">
               {initialTransactions.map((tx) => (
-                <tr key={tx.id} className="hover:bg-slate-50 transition-colors bg-white">
+                <tr key={tx.id} className={`hover:bg-slate-50 transition-colors bg-white ${tx.isReturned ? "opacity-75" : ""}`}>
                   <td className="px-6 py-4">
                     <div className="text-slate-900 font-medium">
                       {new Date(tx.transactionDate).toLocaleDateString("id-ID", {
@@ -236,16 +250,30 @@ export default function ReportClient({
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-bold text-slate-900">{tx.sku}</div>
-                    <div className="text-slate-600 text-xs truncate max-w-[200px]" title={tx.item.title}>
-                      {tx.item.title}
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">{tx.sku}</span>
+                      {tx.isReturned && (
+                        <span className="px-2 py-0.5 rounded text-[9px] uppercase tracking-wider font-black bg-rose-100 text-rose-600 border border-rose-200">
+                          RETUR
+                        </span>
+                      )}
                     </div>
+                    <div className="text-slate-600 text-xs truncate max-w-[200px]" title={tx.item?.title || "Item Terhapus"}>
+                      {tx.item?.title || "Item Terhapus"}
+                    </div>
+                    {tx.isReturned && tx.returnReason && (
+                      <div className="text-[10px] text-rose-600 bg-rose-50 border border-rose-100 rounded px-2 py-0.5 mt-1 inline-block max-w-xs truncate" title={tx.returnReason}>
+                        Alasan: {tx.returnReason}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-slate-900 font-medium">{formatBranchName(tx.branchName)}</div>
                     <div className="text-xs text-slate-500">Kasir: {tx.cashierName}</div>
                   </td>
-                  <td className="px-6 py-4 text-right font-bold text-slate-900">{formatIDR(tx.soldPrice)}</td>
+                  <td className={`px-6 py-4 text-right font-bold ${tx.isReturned ? "line-through text-slate-400" : "text-slate-900"}`}>
+                    {formatIDR(tx.soldPrice)}
+                  </td>
                 </tr>
               ))}
               {initialTransactions.length === 0 && (
@@ -263,19 +291,31 @@ export default function ReportClient({
       {/* Mobile Card List (visible only on mobile) */}
       <div className="block md:hidden space-y-3">
         {initialTransactions.map((tx) => (
-          <div key={tx.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+          <div key={tx.id} className={`bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3 ${tx.isReturned ? "opacity-75" : ""}`}>
             <div className="flex justify-between items-start gap-2">
               <div>
-                <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-600 mb-1 inline-block">
-                  {tx.sku}
-                </span>
-                <h3 className="font-bold text-slate-900 text-sm line-clamp-2 leading-tight">{tx.item.title}</h3>
+                <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                  <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-600 inline-block">
+                    {tx.sku}
+                  </span>
+                  {tx.isReturned && (
+                    <span className="px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider font-black bg-rose-100 text-rose-600 border border-rose-200">
+                      RETUR
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-bold text-slate-900 text-sm line-clamp-2 leading-tight">{tx.item?.title || "Item Terhapus"}</h3>
                 <p className="text-[10px] text-slate-500 mt-1">
                   {new Date(tx.transactionDate).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })} • {new Date(tx.transactionDate).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                 </p>
+                {tx.isReturned && tx.returnReason && (
+                  <div className="text-[9px] text-rose-600 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 mt-1 inline-block">
+                    Alasan: {tx.returnReason}
+                  </div>
+                )}
               </div>
               <div className="text-right whitespace-nowrap">
-                <div className="font-bold text-slate-900 text-sm">{formatIDR(tx.soldPrice)}</div>
+                <div className={`font-bold text-sm ${tx.isReturned ? "line-through text-slate-400" : "text-slate-900"}`}>{formatIDR(tx.soldPrice)}</div>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-50 text-[11px] flex justify-between text-slate-600">
