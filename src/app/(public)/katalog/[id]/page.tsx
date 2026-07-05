@@ -3,8 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import CatalogDetailClient from "./CatalogDetailClient";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 30;
 
 type Props = {
   params: Promise<{ id: string }>;

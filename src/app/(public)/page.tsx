@@ -2,8 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { Status } from "@prisma/client";
 import CatalogView from "./CatalogView";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 30;
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
