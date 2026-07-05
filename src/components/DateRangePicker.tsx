@@ -190,10 +190,10 @@ export default function DateRangePicker({ value, onChange, placeholder = "Semua 
           className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) handleCancel(); }}
         >
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full animate-in fade-in-50 zoom-in-95 duration-150 flex flex-col overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[85vh] md:max-h-[90vh] animate-in fade-in-50 zoom-in-95 duration-150 flex flex-col overflow-hidden">
 
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Pilih Rentang Tanggal</h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -210,31 +210,33 @@ export default function DateRangePicker({ value, onChange, placeholder = "Semua 
             </div>
 
             {/* Modal Body: 2-Column Layout */}
-            <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-100 flex-1">
+            <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-100 flex-1 overflow-y-auto px-1">
 
               {/* Left Column: Filter Cepat Pills */}
-              <div className="sm:w-1/3 p-5 space-y-2 bg-slate-50/40">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">Filter Cepat</p>
-                {presets.map((preset) => (
-                  <button
-                    key={preset.key}
-                    type="button"
-                    onClick={() => applyPreset(preset.key)}
-                    className={`w-full text-left px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-100 active:scale-[0.98] ${
-                      activePreset === preset.key
-                        ? "bg-blue-600 text-white shadow-sm font-semibold border border-blue-600"
-                        : "text-slate-700 hover:bg-blue-50 hover:text-blue-600 border border-slate-100 bg-slate-50/50"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
+              <div className="sm:w-1/3 p-4 sm:p-5 bg-slate-50/40 flex flex-col gap-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 sm:mb-3 px-1">Filter Cepat</p>
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
+                  {presets.map((preset) => (
+                    <button
+                      key={preset.key}
+                      type="button"
+                      onClick={() => applyPreset(preset.key)}
+                      className={`w-full text-center sm:text-left px-3 py-1.5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-100 active:scale-[0.98] ${
+                        activePreset === preset.key
+                          ? "bg-blue-600 text-white shadow-sm font-semibold border border-blue-600"
+                          : "text-slate-700 hover:bg-blue-50 hover:text-blue-600 border border-slate-150 bg-slate-50/50"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Right Column: Single Month Calendar */}
-              <div className="sm:w-2/3 p-5">
+              <div className="sm:w-2/3 p-4 sm:p-5">
                 {/* Month/Year Navigation */}
-                <div className="flex items-center justify-between mb-5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <div className="flex items-center justify-between mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                   <div className="flex gap-1">
                     <button type="button" onClick={handlePrevYear} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-white bg-slate-100 rounded-md transition-all shadow-sm">
                       <ChevronsLeft className="w-4 h-4" />
@@ -257,12 +259,12 @@ export default function DateRangePicker({ value, onChange, placeholder = "Semua 
                 </div>
 
                 {/* Day-of-Week Headers */}
-                <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">
+                <div className="grid grid-cols-7 gap-1 text-center text-[10px] sm:text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
                   <div>Mg</div><div>Sn</div><div>Sl</div><div>Rb</div><div>Km</div><div>Jm</div><div>Sb</div>
                 </div>
 
                 {/* Days Grid */}
-                <div className="grid grid-cols-7 gap-y-2 gap-x-1">
+                <div className="grid grid-cols-7 gap-y-1 gap-x-1">
                   {Array.from({ length: firstDayOfMonthIndex }).map((_, i) => (
                     <div key={`empty-${i}`} />
                   ))}
@@ -272,7 +274,7 @@ export default function DateRangePicker({ value, onChange, placeholder = "Semua 
                     const inRange = isInRange(day);
                     const today = isToday(day);
 
-                    let dayStyles = "w-11 h-11 mx-auto rounded-lg text-sm font-medium flex items-center justify-center transition-all duration-200 cursor-pointer ";
+                    let dayStyles = "w-8 h-8 sm:w-11 sm:h-11 mx-auto rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center transition-all duration-200 cursor-pointer ";
 
                     if (selected) {
                       dayStyles += "bg-blue-600 text-white font-semibold shadow-sm";
@@ -305,7 +307,7 @@ export default function DateRangePicker({ value, onChange, placeholder = "Semua 
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+            <div className="sticky bottom-0 bg-white border-t border-gray-100 pt-3 pb-3 mt-auto z-10 flex items-center justify-end gap-3 px-6 flex-shrink-0">
               <button type="button" onClick={handleCancel} className="px-5 py-2.5 text-sm font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">
                 Batal
               </button>

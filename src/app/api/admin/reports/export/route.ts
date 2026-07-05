@@ -33,9 +33,10 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const startParam = searchParams.get("start");
-    const endParam = searchParams.get("end");
+    const startParam = searchParams.get("start") || searchParams.get("startDate");
+    const endParam = searchParams.get("end") || searchParams.get("endDate");
     const branchParam = searchParams.get("branch");
+    const statusParam = searchParams.get("status") || "ALL";
 
     const isSuperAdmin = session.role === "SUPERADMIN";
 
@@ -70,13 +71,19 @@ export async function GET(request: Request) {
       }
     }
 
-    const where = {
+    const where: any = {
       branchName: {
         contains: "Pasuruan",
         mode: "insensitive" as const,
       },
       ...dateFilter,
     };
+
+    if (statusParam === "SUKSES") {
+      where.isReturned = false;
+    } else if (statusParam === "RETUR") {
+      where.isReturned = true;
+    }
 
     // Query sales transactions from database
     const transactions = await prisma.salesTransaction.findMany({
@@ -91,22 +98,88 @@ export async function GET(request: Request) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Laporan Penjualan");
 
-    // Map exact columns
-    worksheet.columns = [
-      { header: "ID Transaksi", key: "id", width: 15 },
-      { header: "Waktu Transaksi", key: "waktu", width: 25 },
-      { header: "SKU", key: "sku", width: 15 },
-      { header: "Nama Barang", key: "namaBarang", width: 30 },
-      { header: "Kategori", key: "kategori", width: 15 },
-      { header: "Cabang", key: "cabang", width: 20 },
-      { header: "Kasir", key: "kasir", width: 20 },
-      { header: "Harga Terjual", key: "hargaTerjual", width: 20 },
-      { header: "Status Transaksi", key: "statusTransaksi", width: 18 },
-      { header: "Alasan Retur", key: "alasanRetur", width: 30 },
-    ];
+    let titleText = "LAPORAN PENJUALAN - SEMUA TRANSAKSI";
+    if (statusParam === "SUKSES") {
+      titleText = "LAPORAN PENJUALAN - TRANSAKSI SUKSES";
+    } else if (statusParam === "RETUR") {
+      titleText = "LAPORAN PENJUALAN - TRANSAKSI RETUR";
+    }
+
+    // Write title in Row 1
+    worksheet.mergeCells("A1:J1");
+    const titleCell = worksheet.getCell("A1");
+    titleCell.value = titleText;
+    titleCell.font = { name: "Arial", size: 14, bold: true };
+    titleCell.alignment = { vertical: "middle", horizontal: "left" };
+    worksheet.getRow(1).height = 30;
+
+    // Leave Row 2 empty
+    worksheet.getRow(2).height = 15;
+
+    // Define columns mapping and header values dynamically
+    let columnsDef = [];
+    let headerRowValues = [];
+
+    if (statusParam === "RETUR") {
+      columnsDef = [
+        { key: "id", width: 15 },
+        { key: "waktu", width: 25 },
+        { key: "sku", width: 15 },
+        { key: "namaBarang", width: 30 },
+        { key: "kategori", width: 15 },
+        { key: "alasanRetur", width: 30 },
+        { key: "cabang", width: 20 },
+        { key: "kasir", width: 20 },
+        { key: "hargaTerjual", width: 20 },
+        { key: "statusTransaksi", width: 18 },
+      ];
+      headerRowValues = [
+        "ID Transaksi",
+        "Waktu Transaksi",
+        "SKU",
+        "Nama Barang",
+        "Kategori",
+        "Alasan Retur",
+        "Cabang",
+        "Kasir",
+        "Harga Terjual",
+        "Status Transaksi"
+      ];
+    } else {
+      columnsDef = [
+        { key: "id", width: 15 },
+        { key: "waktu", width: 25 },
+        { key: "sku", width: 15 },
+        { key: "namaBarang", width: 30 },
+        { key: "kategori", width: 15 },
+        { key: "cabang", width: 20 },
+        { key: "kasir", width: 20 },
+        { key: "hargaTerjual", width: 20 },
+        { key: "statusTransaksi", width: 18 },
+        { key: "alasanRetur", width: 30 },
+      ];
+      headerRowValues = [
+        "ID Transaksi",
+        "Waktu Transaksi",
+        "SKU",
+        "Nama Barang",
+        "Kategori",
+        "Cabang",
+        "Kasir",
+        "Harga Terjual",
+        "Status Transaksi",
+        "Alasan Retur"
+      ];
+    }
+
+    worksheet.columns = columnsDef;
+
+    // Write header row at Row 3
+    const headerRow = worksheet.getRow(3);
+    headerRow.values = headerRowValues;
+    headerRow.height = 25;
 
     // Style the Header Row cells: Bright Yellow fill (#FFFF00) and bold text
-    const headerRow = worksheet.getRow(1);
     headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "000000" } };
       cell.fill = {
@@ -120,11 +193,12 @@ export async function GET(request: Request) {
         left: { style: "thin", color: { argb: "CCCCCC" } },
         right: { style: "thin", color: { argb: "CCCCCC" } },
       };
+      cell.alignment = { vertical: "middle", horizontal: "left" };
     });
 
-    // Populate data rows
+    // Populate data rows starting at Row 4
     transactions.forEach((tx) => {
-      worksheet.addRow({
+      const newRow = worksheet.addRow({
         id: `TX-${String(tx.id).padStart(5, "0")}`,
         waktu: new Date(tx.transactionDate).toLocaleString("id-ID"),
         sku: tx.sku,
@@ -136,10 +210,30 @@ export async function GET(request: Request) {
         statusTransaksi: tx.isReturned ? "RETUR" : "SUKSES",
         alasanRetur: tx.isReturned ? (tx.returnReason || "Tidak ada alasan") : "-",
       });
+
+      newRow.height = 20;
+
+      // Apply custom background fill for RETUR status
+      newRow.eachCell((cell) => {
+        cell.font = { name: "Arial", size: 10 };
+        cell.border = {
+          top: { style: "thin", color: { argb: "E5E7EB" } },
+          bottom: { style: "thin", color: { argb: "E5E7EB" } },
+          left: { style: "thin", color: { argb: "E5E7EB" } },
+          right: { style: "thin", color: { argb: "E5E7EB" } },
+        };
+        if (statusParam === "RETUR") {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFFFF0F0" },
+          };
+        }
+      });
     });
 
-    // Format the number format for "Harga Terjual" column (column 8)
-    worksheet.getColumn(8).numFmt = '#,##0';
+    // Format the number format dynamically using column key
+    worksheet.getColumn("hargaTerjual").numFmt = '#,##0';
 
     // Calculate sum of Harga Terjual (excluding returned transactions)
     const totalRevenue = transactions.reduce((sum, tx) => sum + (tx.isReturned ? 0 : Number(tx.soldPrice)), 0);
@@ -150,10 +244,19 @@ export async function GET(request: Request) {
       hargaTerjual: totalRevenue,
     });
 
+    summaryRow.height = 22;
+
     // Style summary row to be bold
     summaryRow.getCell("kasir").font = { bold: true };
     summaryRow.getCell("hargaTerjual").font = { bold: true };
     summaryRow.getCell("hargaTerjual").numFmt = '#,##0';
+
+    summaryRow.eachCell((cell) => {
+      cell.border = {
+        top: { style: "thin", color: { argb: "9CA3AF" } },
+        bottom: { style: "double", color: { argb: "9CA3AF" } },
+      };
+    });
 
     // Compile workbook to buffer
     const buffer = await workbook.xlsx.writeBuffer();

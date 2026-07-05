@@ -70,6 +70,8 @@ export default function ReportClient({
     to: parseLocalDate(currentEnd),
   });
 
+  const [statusFilter, setStatusFilter] = useState("ALL");
+
   // Sync state with URL props when they change (e.g. on navigation or browser back/forward)
   useEffect(() => {
     setBranch(currentBranch);
@@ -114,9 +116,13 @@ export default function ReportClient({
     if (dateRange.from) {
       const startStr = toLocalIsoDateString(dateRange.from);
       const endStr = toLocalIsoDateString(dateRange.to || dateRange.from);
+      params.set("startDate", startStr);
+      params.set("endDate", endStr);
+      // Keep "start" and "end" for backward compatibility
       params.set("start", startStr);
       params.set("end", endStr);
     }
+    params.set("status", statusFilter);
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '/lelang';
     const url = `${basePath}/api/admin/reports/export?${params.toString()}`;
     console.log("Triggering download via anchor for: ", url);
@@ -148,73 +154,93 @@ export default function ReportClient({
           <h1 className="text-3xl font-bold text-slate-900">Laporan Penjualan</h1>
           <p className="text-slate-600 mt-1">Rekapitulasi data transaksi dari cabang Anda.</p>
         </div>
-        <button
-          onClick={handleExportExcel}
-          disabled={initialTransactions.length === 0}
-          className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-500 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl font-bold transition-all shadow-sm"
-        >
-          <FileSpreadsheet className="w-5 h-5" />
-          Export Excel (.xlsx)
-        </button>
       </div>
 
-      {/* Filter Card */}
-      <div className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
-        <div className="flex items-center gap-2 font-semibold text-slate-700">
+      {/* Ultra-Compact Filter Row */}
+      <div className="flex items-center gap-1.5 w-full bg-white p-2 rounded-xl border border-gray-150 shadow-sm">
+        <div className="hidden md:flex items-center gap-2 font-semibold text-slate-700 mr-2 flex-shrink-0">
           <Filter className="w-4 h-4 text-slate-400" />
           FILTER LAPORAN
         </div>
-        <div className="max-w-xs w-full">
-          <div className="hidden">
-            <label className="block text-xs text-slate-600 mb-1 font-medium">Cabang</label>
-            <select
-              disabled={!isSuperAdmin}
-              value={branch}
-              onChange={(e) => handleBranchChange(e.target.value)}
-              className={`${
-                !isSuperAdmin 
-                  ? "bg-slate-50 text-slate-500 cursor-not-allowed" 
-                  : "bg-white text-slate-800 cursor-pointer"
-              } border border-slate-200 rounded-md px-3 py-2 text-sm outline-none w-48 shadow-sm font-medium`}
-            >
-              {isSuperAdmin && <option value="all">Semua Cabang</option>}
-              {branchList.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="hidden">
+          <label className="block text-xs text-slate-600 mb-1 font-medium">Cabang</label>
+          <select
+            disabled={!isSuperAdmin}
+            value={branch}
+            onChange={(e) => handleBranchChange(e.target.value)}
+            className={`${
+              !isSuperAdmin 
+                ? "bg-slate-50 text-slate-500 cursor-not-allowed" 
+                : "bg-white text-slate-800 cursor-pointer"
+            } border border-slate-200 rounded-md px-3 py-2 text-sm outline-none w-48 shadow-sm font-medium`}
+          >
+            {isSuperAdmin && <option value="all">Semua Cabang</option>}
+            {branchList.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        {/* Date Range Picker Wrapper */}
+        <div className="flex-1 min-w-0 md:flex-initial md:w-64">
           <DateRangePicker value={dateRange} onChange={handleDateRangeChange} placeholder="Semua Waktu" />
         </div>
+
+        {/* Transaction Status Dropdown */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="w-[28%] md:w-44 shrink-0 text-xs md:text-sm px-1.5 md:px-3 py-2 border border-slate-200 rounded-lg bg-gray-50 md:bg-white text-slate-800 font-semibold md:font-medium outline-none cursor-pointer shadow-sm hover:border-slate-300 transition-all min-h-[38px] md:min-h-[44px]"
+        >
+          <option value="ALL">Semua</option>
+          <option value="SUKSES">Sukses</option>
+          <option value="RETUR">Retur</option>
+        </select>
+
+        {/* Excel Export Button */}
+        <button
+          onClick={handleExportExcel}
+          disabled={initialTransactions.length === 0}
+          className="bg-status-tersedia hover:bg-status-tersedia/90 disabled:bg-slate-200 disabled:text-slate-400 text-white p-2 md:px-4 md:py-2.5 rounded-lg shrink-0 flex items-center justify-center transition-all active:scale-95 shadow-sm font-bold min-h-[38px] md:min-h-[44px]"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          <span className="hidden sm:inline ml-1.5 text-xs md:text-sm font-semibold">Export Excel</span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+        {/* PENDAPATAN BERSIH (Top Row on mobile, Full Width) */}
+        <div className="col-span-2 md:col-span-1 bg-white rounded-2xl p-3.5 md:p-6 border border-gray-150 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-600 font-bold tracking-wider uppercase mb-1">Total Transaksi</p>
-            <h3 className="text-3xl font-black text-slate-900">{activeTxCount}</h3>
+            <p className="text-[10px] md:text-xs text-slate-400 font-bold tracking-wider uppercase mb-1">Pendapatan Bersih</p>
+            <h3 className="text-xl md:text-2xl font-black text-slate-900">{formatIDR(totalRevenue)}</h3>
           </div>
-          <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
-            <span className="text-2xl">🛍️</span>
+          <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-green-50 flex items-center justify-center border border-green-100 flex-shrink-0">
+            <span className="text-lg md:text-2xl">💰</span>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+
+        {/* TOTAL TRANSAKSI */}
+        <div className="col-span-1 bg-white rounded-2xl p-3.5 md:p-6 border border-gray-150 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-600 font-bold tracking-wider uppercase mb-1">Pendapatan Bersih</p>
-            <h3 className="text-3xl font-black text-slate-900">{formatIDR(totalRevenue)}</h3>
+            <p className="text-[10px] md:text-xs text-slate-400 font-bold tracking-wider uppercase mb-1">Total Transaksi</p>
+            <h3 className="text-xl md:text-2xl font-black text-slate-900">{activeTxCount}</h3>
           </div>
-          <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center border border-green-100">
-            <span className="text-2xl">💰</span>
+          <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100 flex-shrink-0">
+            <span className="text-lg md:text-2xl">🛍️</span>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+
+        {/* TRANSAKSI RETUR */}
+        <div className="col-span-1 bg-white rounded-2xl p-3.5 md:p-6 border border-gray-150 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-600 font-bold tracking-wider uppercase mb-1">Transaksi Retur</p>
-            <h3 className="text-3xl font-black text-slate-900">{returnedTxCount}</h3>
+            <p className="text-[10px] md:text-xs text-slate-400 font-bold tracking-wider uppercase mb-1">Transaksi Retur</p>
+            <h3 className="text-xl md:text-2xl font-black text-slate-900">{returnedTxCount}</h3>
           </div>
-          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center border border-red-100">
-            <span className="text-2xl">🔄</span>
+          <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-red-50 flex items-center justify-center border border-red-100 flex-shrink-0">
+            <span className="text-lg md:text-2xl">🔄</span>
           </div>
         </div>
       </div>

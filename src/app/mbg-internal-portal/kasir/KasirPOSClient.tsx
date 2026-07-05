@@ -7,8 +7,6 @@ import {
   CheckCircle,
   AlertCircle,
   Trash2,
-  Camera,
-  CameraOff,
   ShoppingCart,
   Tag,
   X,
@@ -321,6 +319,7 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
 
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
+    if (!confirm("Apakah Anda yakin ingin menyelesaikan transaksi ini?")) return;
     setLoading(true);
     setError("");
 
@@ -424,9 +423,6 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
             <ScanBarcode className="w-8 h-8 text-brand-600" /> Modul POS Kasir
           </h1>
-          <p className="text-slate-500 mt-1">
-            Scan barcode via kamera atau input manual. Kumpulkan barang lalu checkout sekaligus.
-          </p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -454,80 +450,31 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
               </div>
             </div>
 
-            {/* Camera Scanner */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-brand-500" />
-                  Live Scanner
-                </h3>
-                <button
-                  onClick={cameraActive ? stopCamera : startCamera}
-                  className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                    cameraActive
-                      ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                      : "bg-brand-50 text-brand-600 hover:bg-brand-100 border border-brand-200"
-                  }`}
-                >
-                  {cameraActive ? (
-                    <><CameraOff className="w-3.5 h-3.5" /> Matikan</>
-                  ) : (
-                    <><Camera className="w-3.5 h-3.5" /> Nyalakan</>
-                  )}
-                </button>
-              </div>
-
-              <div className="relative bg-slate-900">
-                <div
-                  id="pos-camera-reader"
-                  className={`w-full ${cameraActive ? "min-h-[220px]" : "h-0 overflow-hidden"}`}
+            {/* Manual SKU Fallback System */}
+            <div className="bg-white rounded-2xl border border-gray-150 p-4 shadow-sm">
+              <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
+                Input Manual SKU
+              </label>
+              <form onSubmit={handleManualScan} className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  inputMode="numeric"
+                  value={skuInput}
+                  onChange={(e) => setSkuInput(e.target.value.replace(/\D/g, ""))}
+                  disabled={loading}
+                  placeholder="Ketik SKU lalu Enter..."
+                  className="flex-1 bg-white border-2 border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 text-sm font-mono tracking-widest focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-sm disabled:opacity-50"
+                  autoComplete="off"
                 />
-                {!cameraActive && (
-                  <div className="flex flex-col items-center justify-center py-10 text-center px-4">
-                    <div className="relative mb-3">
-                      <div className="absolute inset-0 bg-slate-700 rounded-full blur-lg animate-pulse" />
-                      <Camera className="w-12 h-12 text-slate-500 relative z-10" />
-                    </div>
-                    <p className="text-slate-400 text-xs font-medium">
-                      Klik &quot;Nyalakan&quot; untuk memulai kamera
-                    </p>
-                  </div>
-                )}
-                {scanCooldown && (
-                  <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center z-20 pointer-events-none">
-                    <div className="bg-green-500 text-white px-4 py-2 rounded-xl font-bold text-sm animate-in zoom-in-95 shadow-lg">
-                      ✓ Terdeteksi!
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Manual SKU Input */}
-              <div className="p-4 border-t border-slate-100">
-                <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
-                  Input Manual SKU
-                </label>
-                <form onSubmit={handleManualScan} className="flex gap-2">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    inputMode="numeric"
-                    value={skuInput}
-                    onChange={(e) => setSkuInput(e.target.value.replace(/\D/g, ""))}
-                    disabled={loading}
-                    placeholder="Ketik SKU lalu Enter..."
-                    className="flex-1 bg-white border-2 border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 text-sm font-mono tracking-widest focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-sm disabled:opacity-50"
-                    autoComplete="off"
-                  />
-                  <button
-                    type="submit"
-                    disabled={loading || !skuInput.trim()}
-                    className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-40 shadow-sm"
-                  >
-                    +
-                  </button>
-                </form>
-              </div>
+                <button
+                  type="submit"
+                  disabled={loading || !skuInput.trim()}
+                  className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-40 shadow-sm"
+                >
+                  +
+                </button>
+              </form>
             </div>
 
             {/* Feedback Messages */}
@@ -672,7 +619,7 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
                   <button
                     onClick={handleCheckout}
                     disabled={loading || cartItems.length === 0}
-                    className="w-full mt-2 py-4 rounded-xl bg-green-500 hover:bg-green-600 text-white font-black text-lg uppercase tracking-widest shadow-lg shadow-green-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                    className="w-full mt-2 py-3.5 rounded-xl bg-status-tersedia hover:bg-status-tersedia/90 text-white text-base font-semibold uppercase tracking-widest shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                   >
                     {loading ? (
                       "Memproses Data..."
