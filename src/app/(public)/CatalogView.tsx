@@ -1,10 +1,11 @@
 "use client";
 import { Status, AuctionItem } from '@prisma/client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import SearchBar from "@/components/SearchBar";
 
 import { 
   LayoutGrid, 
@@ -20,7 +21,9 @@ import {
   MessageCircle,
   MapPin,
   PlayCircle,
-  Flame
+  Flame,
+  Wrench,
+  Home
 } from "lucide-react";
 
 type CatalogViewProps = {
@@ -37,6 +40,9 @@ const getCategoryIcon = (categoryName: string) => {
   if (name.includes("semua")) return <LayoutGrid className="w-4 h-4" />;
   if (name.includes("elektronik") || name.includes("hp") || name.includes("laptop")) return <Laptop className="w-4 h-4" />;
   if (name.includes("otomotif") || name.includes("motor") || name.includes("mobil") || name.includes("kendaraan")) return <Car className="w-4 h-4" />;
+  if (name.includes("tukang") || name.includes("perkakas") || name.includes("bengkel")) return <Wrench className="w-4 h-4" />;
+  if (name.includes("pakaian") || name.includes("fashion") || name.includes("baju")) return <Shirt className="w-4 h-4" />;
+  if (name.includes("rumah tangga") || name.includes("perabot") || name.includes("dapur")) return <Home className="w-4 h-4" />;
   return <Package className="w-4 h-4" />;
 };
 
@@ -262,44 +268,69 @@ export default function CatalogView({
 
   return (
     <>
-      {/* Filters */}
-      <div className="mb-6 space-y-4">
-        <div>
-          <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Kategori</h2>
-          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2 pb-2">
-            <button
-              onClick={() => handleCategoryClick("Semua Kategori")}
-              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-2 w-full rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
-                activeCategory === "Semua Kategori"
-                  ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
-                  : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
-              }`}
-            >
-              {getCategoryIcon("Semua Kategori")} <span className="truncate">Semua</span>
-            </button>
-            {["Elektronik", "Gerabahan", "Kendaraan"].map((catName) => {
-              const matchedDbCat = categories.find(c => c.category.toLowerCase() === catName.toLowerCase())?.category || catName;
-              return (
-                <button
-                  key={catName}
-                  onClick={() => handleCategoryClick(matchedDbCat)}
-                  className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-2 w-full rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
-                    activeCategory.toLowerCase() === matchedDbCat.toLowerCase()
-                      ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
-                      : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900"
-                  }`}
-                  title={catName}
-                >
-                  {getCategoryIcon(catName)} <span className="truncate">{catName}</span>
-                </button>
-              );
-            })}
+      {/* Top Header Gradient Block (The Yellow Box Region) */}
+      <div className="w-full bg-gradient-to-b from-[#1e3a8a] to-[#122557] text-white pt-14 pb-20 relative z-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* Header title & desc */}
+          <div className="mb-8 text-center sm:text-left">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white mb-2.5">
+              Katalog <span className="text-blue-300">MBG</span>
+            </h1>
+            <p className="text-xs sm:text-base text-blue-100 max-w-2xl font-medium leading-relaxed">
+              Temukan barang preloved & lelang terbaik dari seluruh cabang kami.
+            </p>
           </div>
+
+          {/* Search Bar - Moved to the middle of the box! */}
+          <div className="mb-10 w-full flex justify-center">
+            <Suspense fallback={<div className="w-full max-w-2xl h-14 bg-white/10 rounded-2xl animate-pulse"></div>}>
+              <SearchBar />
+            </Suspense>
+          </div>
+
+          {/* Category Filter Tabs */}
+          <div className="space-y-3">
+            <h2 className="text-[10px] font-bold text-blue-200 uppercase tracking-wider">Kategori</h2>
+            <div className="flex flex-row overflow-x-auto gap-3 pb-3 whitespace-nowrap scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              <button
+                onClick={() => handleCategoryClick("Semua Kategori")}
+                className={`flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+                  activeCategory === "Semua Kategori"
+                    ? "bg-[#2563eb] text-white font-extrabold shadow-md border-0"
+                    : "bg-white/10 text-white/95 border border-white/10 hover:bg-white/20 backdrop-blur-md"
+                }`}
+              >
+                {getCategoryIcon("Semua Kategori")} <span>Semua</span>
+              </button>
+              {["Elektronik", "Gerabahan", "Kendaraan", "Alat Tukang", "Pakaian", "Alat Rumah Tangga"].map((catName) => {
+                const matchedDbCat = categories.find(c => c.category.toLowerCase() === catName.toLowerCase())?.category || catName;
+                const isActive = activeCategory.toLowerCase() === matchedDbCat.toLowerCase();
+                return (
+                  <button
+                    key={catName}
+                    onClick={() => handleCategoryClick(matchedDbCat)}
+                    className={`flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+                      isActive
+                        ? "bg-[#2563eb] text-white font-extrabold shadow-md border-0"
+                        : "bg-white/10 text-white/95 border border-white/10 hover:bg-white/20 backdrop-blur-md"
+                    }`}
+                    title={catName}
+                  >
+                    {getCategoryIcon(catName)} <span>{catName}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
       </div>
 
-      {/* Grid: Extreme Density */}
-      <div className="relative">
+      {/* Grid: Extreme Density Container */}
+      <div className="w-full bg-slate-50 -mt-10 rounded-t-[32px] sm:rounded-t-[48px] pt-10 pb-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative">
         {loading && loadedItems.length > 0 && (
           <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-start justify-center pt-20 rounded-xl">
             <div className="w-10 h-10 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin shadow-md"></div>
@@ -436,6 +467,8 @@ export default function CatalogView({
           <div className="text-slate-500 text-sm font-medium">Memuat katalog...</div>
         </div>
       )}
+        </div>
+      </div>
 
       {/* Modal / Drawer for Instant Product Details */}
       {selectedItem && (

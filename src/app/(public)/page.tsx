@@ -64,17 +64,7 @@ export default async function PublicHomePage({ searchParams }: Props) {
   const serializedItems = JSON.parse(JSON.stringify(items));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full pb-20">
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-2">
-          Katalog <span className="text-brand-700">MBG</span>
-        </h1>
-        <p className="text-sm md:text-base text-slate-600">
-          Temukan barang preloved & lelang terbaik dari seluruh cabang kami.
-        </p>
-      </div>
-
-      {/* Catalog View (Client Component) */}
+    <div className="w-full pb-20">
       <CatalogView 
         items={serializedItems}
         categories={categories}
