@@ -433,6 +433,9 @@ function AddItemForm() {
                   <option>Elektronik</option>
                   <option>Gerabahan</option>
                   <option>Kendaraan</option>
+                  <option>Alat Tukang</option>
+                  <option>Pakaian</option>
+                  <option>Alat Rumah Tangga</option>
                 </select>
               )}
             </div>

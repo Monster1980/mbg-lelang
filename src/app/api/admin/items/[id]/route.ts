@@ -127,6 +127,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       description: body.description?.trim(),
       defects: body.defects?.trim() || null,
       images: body.images || [],
+      nomorInduk: body.nomorInduk?.trim() || null,
     };
 
     const updatedItem = await prisma.auctionItem.update({

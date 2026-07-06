@@ -256,6 +256,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
         description: editingItem.description,
         defects: editingItem.defects,
         images: compressedImages.map((img: any) => img.url),
+        nomorInduk: editingItem.nomorInduk || "",
       };
 
       const res = await fetch(`/api/admin/items/${editingItem.id}`, {
@@ -463,6 +464,23 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                 <p className="text-xs text-slate-400 mt-1">Harus unik. Hanya angka yang diperbolehkan.</p>
               </div>
 
+              {/* Nomor Induk (Grouping ID Varian) */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Nomor Induk (Grouping ID Varian)
+                </label>
+                <input
+                  type="text"
+                  value={editingItem.nomorInduk || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, nomorInduk: e.target.value })}
+                  className={inputClassName}
+                  placeholder="Contoh: 1001 (kosongkan jika tidak dikelompokkan)"
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  Barang dengan Nomor Induk yang sama akan dikelompokkan sebagai varian di katalog publik.
+                </p>
+              </div>
+
               {/* Title */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -489,6 +507,9 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                   <option>Elektronik</option>
                   <option>Gerabahan</option>
                   <option>Kendaraan</option>
+                  <option>Alat Tukang</option>
+                  <option>Pakaian</option>
+                  <option>Alat Rumah Tangga</option>
                 </select>
               </div>
 
