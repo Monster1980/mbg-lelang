@@ -311,7 +311,6 @@ function AddItemForm() {
       <div className="bg-white rounded-2xl p-5 md:p-8 border border-slate-200 shadow-md">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {/* ROW 1 */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                 Input SKU / ID Barang <span className="text-red-500">*</span>
@@ -319,14 +318,15 @@ function AddItemForm() {
               <input
                 required
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
+                pattern="[a-zA-Z0-9-]*"
                 value={formData.sku}
-                onChange={(e) => setFormData({ ...formData, sku: e.target.value.replace(/\D/g, "") })}
+                onChange={(e) => setFormData({ ...formData, sku: e.target.value.replace(/[^a-zA-Z0-9-]/g, "") })}
                 className={inputClassName}
-                placeholder="Contoh: 001234"
+                placeholder="Contoh: 001234-A"
               />
-              <p className="text-xs text-slate-400 mt-1">Harus unik. Hanya angka yang diperbolehkan.</p>
+              <p className="text-xs text-slate-400 mt-1">Harus unik. Hanya huruf, angka, dan tanda hubung (-) yang diperbolehkan.</p>
+
+
 
               <div className="mt-3">
                 <button
