@@ -527,7 +527,7 @@ export default function UnifiedGudangClient({ dashboardData, lifecycleCounts, ca
                       placeholder="Contoh: BRG-001" 
                       className="w-full border border-slate-200 text-slate-900 placeholder-slate-400 p-3.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed" 
                       value={formBaru.uniqueCode} 
-                      onChange={e => setFormBaru({...formBaru, uniqueCode: e.target.value.replace(/[^a-zA-Z0-9-]/g, "")})} 
+                      onChange={e => setFormBaru({...formBaru, uniqueCode: e.target.value})} 
                     />
                   </div>
                   <div className="space-y-2">
@@ -918,7 +918,7 @@ export default function UnifiedGudangClient({ dashboardData, lifecycleCounts, ca
             <div className="space-y-4 mb-6">
               <div className="space-y-1">
                 <label className="block text-sm font-semibold text-slate-800">Input Nomor SKU Baru <span className="text-red-500">*</span></label>
-                <input required placeholder="SKU Kontrak Baru" className="w-full border border-slate-200 text-slate-900 font-mono p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all bg-slate-50" value={newUniqueCode} onChange={e => setNewUniqueCode(e.target.value.replace(/[^a-zA-Z0-9-]/g, ""))} />
+                <input required placeholder="SKU Kontrak Baru" className="w-full border border-slate-200 text-slate-900 font-mono p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all bg-slate-50" value={newUniqueCode} onChange={e => setNewUniqueCode(e.target.value)} />
               </div>
               <div className="space-y-1">
                 <label className="block text-sm font-semibold text-slate-800">Tanggal Perpanjang <span className="text-red-500">*</span></label>

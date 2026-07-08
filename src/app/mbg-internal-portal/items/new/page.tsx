@@ -318,13 +318,12 @@ function AddItemForm() {
               <input
                 required
                 type="text"
-                pattern="[a-zA-Z0-9-]*"
                 value={formData.sku}
-                onChange={(e) => setFormData({ ...formData, sku: e.target.value.replace(/[^a-zA-Z0-9-]/g, "") })}
+                onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                 className={inputClassName}
-                placeholder="Contoh: 001234-A"
+                placeholder="Contoh: SKU-1234"
               />
-              <p className="text-xs text-slate-400 mt-1">Harus unik. Hanya huruf, angka, dan tanda hubung (-) yang diperbolehkan.</p>
+              <p className="text-xs text-slate-400 mt-1">Harus unik.</p>
 
 
 

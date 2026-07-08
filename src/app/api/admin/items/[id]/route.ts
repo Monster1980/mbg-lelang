@@ -98,12 +98,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     const trimmedSku = body.sku.trim();
-    if (!/^\d+$/.test(trimmedSku)) {
-      return NextResponse.json(
-        { success: false, message: "SKU harus berupa angka saja." },
-        { status: 400 }
-      );
-    }
 
     // Verify product exists
     const dbItem = await prisma.auctionItem.findUnique({ where: { id: itemId } });

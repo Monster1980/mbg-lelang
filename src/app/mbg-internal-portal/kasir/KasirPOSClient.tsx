@@ -460,7 +460,7 @@ export default function KasirPOSClient({ cashierName, branchName }: Props) {
                   ref={inputRef}
                   type="text"
                   value={skuInput}
-                  onChange={(e) => setSkuInput(e.target.value.replace(/[^a-zA-Z0-9-]/g, ""))}
+                  onChange={(e) => setSkuInput(e.target.value)}
                   disabled={loading}
                   placeholder="Ketik SKU lalu Enter..."
                   className="flex-1 bg-white border-2 border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 text-sm font-mono tracking-widest focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-sm disabled:opacity-50"

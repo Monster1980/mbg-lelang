@@ -17,12 +17,6 @@ export async function POST(request: Request) {
     }
 
     const trimmedSku = body.sku.trim();
-    if (!/^\d+$/.test(trimmedSku)) {
-      return NextResponse.json(
-        { success: false, message: "SKU harus berupa angka saja." },
-        { status: 400 }
-      );
-    }
 
     // Create parent and child variants atomically
     const result = await prisma.$transaction(async (tx) => {

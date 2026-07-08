@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -138,9 +138,9 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
   };
 
   // Helper to get effective item status
-  const getEffectiveItemStatus = (item: Item) => {
+  const getEffectiveItemStatus = useCallback((item: Item) => {
     return overriddenStatuses[item.id]?.status || item.status;
-  };
+  }, [overriddenStatuses]);
   
   // Return reason states
   const [returnConfirm, setReturnConfirm] = useState<{
@@ -561,13 +561,12 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
                 <input
                   required
                   type="text"
-                  pattern="[a-zA-Z0-9-]*"
                   value={editingItem.sku}
-                  onChange={(e) => setEditingItem({ ...editingItem, sku: e.target.value.replace(/[^a-zA-Z0-9-]/g, "") })}
+                  onChange={(e) => setEditingItem({ ...editingItem, sku: e.target.value })}
                   className={inputClassName}
-                  placeholder="Contoh: 001234-A"
+                  placeholder="Contoh: SKU-1234"
                 />
-                <p className="text-xs text-slate-400 mt-1">Harus unik. Hanya huruf, angka, dan tanda hubung (-) yang diperbolehkan.</p>
+                <p className="text-xs text-slate-400 mt-1">Harus unik.</p>
               </div>
 
               {/* Nomor Induk (Grouping ID Varian) */}
