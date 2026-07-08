@@ -248,7 +248,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
       }
       return sortDirection === "asc" ? cmp : -cmp;
     });
-  }, [filteredItems, sortField, sortDirection]);
+  }, [filteredItems, sortField, sortDirection, getEffectiveItemStatus]);
 
   // 3. Paginate
   const totalPages = Math.max(1, Math.ceil(sortedItems.length / ITEMS_PER_PAGE));
@@ -1655,7 +1655,7 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
               Catatan Penting Penjaminan Transaksi:
             </h4>
             <p className="italic">
-              "Sesuai dengan regulasi penjaminan transaksi retail PT Makmur Bersama Gadai, seluruh transaksi pembayaran Down Payment (DP) maupun Pelunasan melalui metode Transfer Bank secara resmi dialihkan ke rekening internal: Bank BCA — No. Rekening: 123-4567-XXX — a.n. YONGKI selaku Direktur Utama PT MBG. Dokumen ini sah sebagai bukti reservasi unit."
+              {"\"Sesuai dengan regulasi penjaminan transaksi retail PT Makmur Bersama Gadai, seluruh transaksi pembayaran Down Payment (DP) maupun Pelunasan melalui metode Transfer Bank secara resmi dialihkan ke rekening internal: Bank BCA — No. Rekening: 123-4567-XXX — a.n. YONGKI selaku Direktur Utama PT MBG. Dokumen ini sah sebagai bukti reservasi unit.\""}
             </p>
           </div>
 
