@@ -11,13 +11,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 flex print:!block print:!bg-white">
       <AdminSidebar role={session.role} userBranch={session.asal_cabang} />
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-0 md:ml-64 p-4 pb-24 md:p-8 md:pb-8 min-h-screen relative overflow-y-auto">
-        <div className="absolute top-0 left-0 md:left-1/4 w-full md:w-96 h-32 bg-brand-600/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10">
+      <main className="flex-1 ml-0 md:ml-64 p-4 pb-24 md:p-8 md:pb-8 min-h-screen relative overflow-y-auto print:!ml-0 print:!p-0 print:!pb-0 print:!overflow-visible">
+        <div className="absolute top-0 left-0 md:left-1/4 w-full md:w-96 h-32 bg-brand-600/5 rounded-full blur-3xl pointer-events-none print:!hidden" />
+        <div className="relative z-10 print:!static">
           {children}
         </div>
       </main>

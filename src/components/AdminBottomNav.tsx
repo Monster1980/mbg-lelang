@@ -189,7 +189,7 @@ export default function AdminBottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 grid grid-cols-5 h-16 md:hidden px-1 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 grid grid-cols-5 h-16 md:hidden px-1 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] print:!hidden">
         {tabs.map((tab, index) => {
           if (tab.isFab) {
             return (

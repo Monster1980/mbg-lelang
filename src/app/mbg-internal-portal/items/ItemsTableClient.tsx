@@ -1578,111 +1578,162 @@ export default function ItemsTableClient({ items }: { items: Item[] }) {
 
       {/* ═══════════ E-INVOICE PRINTABLE DOCUMENT ═══════════ */}
       {printInvoiceData && (
-        <div className="hidden print:block w-full max-w-[800px] mx-auto p-12 bg-white text-slate-900 border border-slate-200 rounded-lg">
-          {/* Header */}
-          <div className="border-b-2 border-slate-900 pb-6 mb-8 flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900">
-                PT MAKMUR BERSAMA GADAI
-              </h1>
-              <p className="text-xs text-slate-600 font-semibold mt-1">
-                KANTOR CABANG: {printInvoiceData.item.branchName.toUpperCase()}
+        <div
+          id="mbg-einvoice-print"
+          className="hidden print:!block fixed inset-0 z-[9999] w-full min-h-screen bg-white p-0 m-0"
+        >
+          <div className="w-full max-w-[800px] mx-auto px-12 py-10 bg-white text-slate-900">
+            {/* Header */}
+            <div className="border-b-2 border-slate-900 pb-6 mb-8 flex justify-between items-start">
+              <div>
+                <h1 className="text-2xl font-black tracking-tight text-slate-900">
+                  PT MAKMUR BERSAMA GADAI
+                </h1>
+                <p className="text-xs text-slate-600 font-semibold mt-1">
+                  KANTOR CABANG: {printInvoiceData.item.branchName.toUpperCase()}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Layanan Penjaminan Resmi Gadai &amp; Marketplace Gadai Terpercaya
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="inline-block px-3 py-1 bg-slate-900 text-white font-mono text-xs font-bold rounded">
+                  E-INVOICE RESMI
+                </span>
+              </div>
+            </div>
+
+            {/* Metadata Block */}
+            <div className="grid grid-cols-2 gap-6 mb-8 text-xs text-slate-800">
+              <div>
+                <p className="text-slate-500 font-bold uppercase tracking-wider mb-1">Diterbitkan Untuk:</p>
+                <p className="font-bold text-slate-900 text-sm">{printInvoiceData.customerName.toUpperCase()}</p>
+                <p className="text-slate-600">Pelanggan Cabang {printInvoiceData.item.branchName}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-slate-500 font-bold uppercase tracking-wider mb-1">Rincian Dokumen:</p>
+                <p className="font-mono font-bold text-slate-900 text-sm">{printInvoiceData.invoiceNo}</p>
+                <p className="text-slate-600">Tanggal: {printInvoiceData.timestamp}</p>
+              </div>
+            </div>
+
+            {/* Table */}
+            <table className="w-full text-left text-xs mb-10 border-collapse text-slate-800">
+              <thead>
+                <tr className="border-b border-slate-300 text-slate-500 font-bold">
+                  <th className="py-3 pr-4">NAMA BARANG (SKU)</th>
+                  <th className="py-3 px-4 text-right">HARGA ASLI</th>
+                  <th className="py-3 px-4 text-center">JENIS PEMBAYARAN</th>
+                  <th className="py-3 pl-4 text-right">JUMLAH DIBAYAR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-slate-200 text-slate-900 font-medium">
+                  <td className="py-4 pr-4">
+                    <p className="font-bold text-sm text-slate-900">{printInvoiceData.item.title}</p>
+                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">SKU: {printInvoiceData.item.sku}</p>
+                  </td>
+                  <td className="py-4 px-4 text-right font-mono">
+                    {formatIDR(printInvoiceData.item.price)}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <span className={`px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider ${
+                      printInvoiceData.status === "Dipesan (DP)"
+                        ? "bg-blue-100 text-blue-800 border border-blue-200"
+                        : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                    }`}>
+                      {printInvoiceData.status === "Dipesan (DP)" ? "DOWN PAYMENT (DP)" : "PELUNASAN PENUH"}
+                    </span>
+                  </td>
+                  <td className="py-4 pl-4 text-right font-bold text-sm font-mono">
+                    {formatIDR(printInvoiceData.amount)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* Trust Clause Catatan Kaki */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-10 text-[10px] leading-relaxed text-slate-600">
+              <h4 className="font-bold text-slate-900 text-xs mb-1.5 uppercase tracking-wider">
+                Catatan Penting Penjaminan Transaksi:
+              </h4>
+              <p className="italic">
+                {"\"Sesuai dengan regulasi penjaminan transaksi retail PT Makmur Bersama Gadai, seluruh transaksi pembayaran Down Payment (DP) maupun Pelunasan melalui metode Transfer Bank secara resmi dialihkan ke rekening internal: Bank BNI — No. Rekening: 1793056882 — a.n. Jaha Joel Situmorang selaku Kepala Toko Lelang Utama PT MBG Cabang Pasuruan Sangar. Dokumen ini sah sebagai bukti reservasi unit.\""}
               </p>
-              <p className="text-[10px] text-slate-500">
-                Layanan Penjaminan Resmi Gadai & Marketplace Gadai Terpercaya
-              </p>
             </div>
-            <div className="text-right">
-              <span className="inline-block px-3 py-1 bg-slate-900 text-white font-mono text-xs font-bold rounded">
-                E-INVOICE RESMI
-              </span>
-            </div>
-          </div>
 
-          {/* Metadata Block */}
-          <div className="grid grid-cols-2 gap-6 mb-8 text-xs text-slate-800">
-            <div>
-              <p className="text-slate-500 font-bold uppercase tracking-wider mb-1">Diterbitkan Untuk:</p>
-              <p className="font-bold text-slate-900 text-sm">{printInvoiceData.customerName.toUpperCase()}</p>
-              <p className="text-slate-600">Pelanggan Cabang {printInvoiceData.item.branchName}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-slate-500 font-bold uppercase tracking-wider mb-1">Rincian Dokumen:</p>
-              <p className="font-mono font-bold text-slate-900 text-sm">{printInvoiceData.invoiceNo}</p>
-              <p className="text-slate-600">Tanggal: {printInvoiceData.timestamp}</p>
-            </div>
-          </div>
+            {/* Footer stamp and signature */}
+            <div className="flex justify-between items-end mt-12 pt-6 border-t border-slate-100 text-slate-800">
+              <div className="text-left text-[9px] text-slate-500">
+                <p>Dokumen ini diterbitkan secara elektronik oleh sistem retail marketplace</p>
+                <p className="font-bold font-mono mt-1">PT MAKMUR BERSAMA GADAI &copy; {new Date().getFullYear()}</p>
+              </div>
+              <div className="text-center w-52">
+                <p className="text-[10px] text-slate-600 mb-1 font-semibold">
+                  Kepala Cabang {printInvoiceData.item.branchName}
+                </p>
+                
+                {/* Digital stamp placeholder */}
+                <div className="my-3 flex justify-center items-center h-16 relative">
+                  <div className="border-2 border-dashed border-blue-600 text-blue-600 text-[8px] font-black rounded-lg px-3 py-1.5 uppercase tracking-widest leading-none rotate-6 select-none opacity-80 scale-105">
+                    <p className="border-b border-blue-600 pb-0.5 mb-0.5 font-bold">PT MBG APPROVED</p>
+                    <p className="text-[7px]">DIGITAL SIGNATURE</p>
+                  </div>
+                </div>
 
-          {/* Table */}
-          <table className="w-full text-left text-xs mb-10 border-collapse text-slate-800">
-            <thead>
-              <tr className="border-b border-slate-300 text-slate-500 font-bold">
-                <th className="py-3 pr-4">NAMA BARANG (SKU)</th>
-                <th className="py-3 px-4 text-right">HARGA ASLI</th>
-                <th className="py-3 px-4 text-center">JENIS PEMBAYARAN</th>
-                <th className="py-3 pl-4 text-right">JUMLAH DIBAYAR</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-slate-200 text-slate-900 font-medium">
-                <td className="py-4 pr-4">
-                  <p className="font-bold text-sm text-slate-900">{printInvoiceData.item.title}</p>
-                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">SKU: {printInvoiceData.item.sku}</p>
-                </td>
-                <td className="py-4 px-4 text-right font-mono">
-                  {formatIDR(printInvoiceData.item.price)}
-                </td>
-                <td className="py-4 px-4 text-center">
-                  <span className={`px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider ${
-                    printInvoiceData.status === "Dipesan (DP)"
-                      ? "bg-blue-100 text-blue-800 border border-blue-200"
-                      : "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                  }`}>
-                    {printInvoiceData.status === "Dipesan (DP)" ? "DOWN PAYMENT (DP)" : "PELUNASAN PENUH"}
-                  </span>
-                </td>
-                <td className="py-4 pl-4 text-right font-bold text-sm font-mono">
-                  {formatIDR(printInvoiceData.amount)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Trust Clause Catatan Kaki */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-10 text-[10px] leading-relaxed text-slate-600">
-            <h4 className="font-bold text-slate-900 text-xs mb-1.5 uppercase tracking-wider">
-              Catatan Penting Penjaminan Transaksi:
-            </h4>
-            <p className="italic">
-              {"\"Sesuai dengan regulasi penjaminan transaksi retail PT Makmur Bersama Gadai, seluruh transaksi pembayaran Down Payment (DP) maupun Pelunasan melalui metode Transfer Bank secara resmi dialihkan ke rekening internal: Bank BCA — No. Rekening: 123-4567-XXX — a.n. YONGKI selaku Direktur Utama PT MBG. Dokumen ini sah sebagai bukti reservasi unit.\""}
-            </p>
-          </div>
-
-          {/* Footer stamp and signature */}
-          <div className="flex justify-between items-end mt-12 pt-6 border-t border-slate-100 text-slate-800">
-            <div className="text-left text-[9px] text-slate-500">
-              <p>Dokumen ini diterbitkan secara elektronik oleh sistem retail marketplace</p>
-              <p className="font-bold font-mono mt-1">PT MAKMUR BERSAMA GADAI &copy; {new Date().getFullYear()}</p>
-            </div>
-            <div className="text-center w-52">
-              <p className="text-[10px] text-slate-600 mb-1 font-semibold">
-                Kepala Cabang {printInvoiceData.item.branchName}
-              </p>
-              
-              {/* Digital stamp placeholder */}
-              <div className="my-3 flex justify-center items-center h-16 relative">
-                <div className="border-2 border-dashed border-blue-600 text-blue-600 text-[8px] font-black rounded-lg px-3 py-1.5 uppercase tracking-widest leading-none rotate-6 select-none opacity-80 scale-105">
-                  <p className="border-b border-blue-600 pb-0.5 mb-0.5 font-bold">PT MBG APPROVED</p>
-                  <p className="text-[7px]">DIGITAL SIGNATURE</p>
+                <div className="border-t border-slate-300 pt-1">
+                  <p className="font-bold text-[10px] text-slate-900">MANAGER ON DUTY</p>
+                  <p className="text-[9px] text-slate-500 font-mono">AUTHORIZED DIGITAL DOCUMENT</p>
                 </div>
               </div>
-
-              <div className="border-t border-slate-300 pt-1">
-                <p className="font-bold text-[10px] text-slate-900">MANAGER ON DUTY</p>
-                <p className="text-[9px] text-slate-500 font-mono">AUTHORIZED DIGITAL DOCUMENT</p>
-              </div>
             </div>
           </div>
+
+          {/* Print-specific CSS: full isolation of invoice content */}
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+                @media print {
+                  /* Hide everything in the document */
+                  body > * { display: none !important; }
+                  body { background: white !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+                  /* Unhide the React root and all ancestors up to the invoice */
+                  body > #__next,
+                  body > #__next * { display: revert !important; }
+
+                  /* But re-hide everything that is NOT the invoice */
+                  aside, nav, [class*="print:!hidden"], [class*="print:hidden"] { display: none !important; }
+
+                  /* Make the invoice visible and full-width */
+                  #mbg-einvoice-print {
+                    display: block !important;
+                    position: fixed !important;
+                    inset: 0 !important;
+                    z-index: 99999 !important;
+                    width: 100% !important;
+                    min-height: 100vh !important;
+                    background: white !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    overflow: visible !important;
+                  }
+                  #mbg-einvoice-print * {
+                    visibility: visible !important;
+                    color-adjust: exact !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                  }
+
+                  /* A4 page layout */
+                  @page {
+                    size: A4 portrait;
+                    margin: 10mm;
+                  }
+                }
+              `,
+            }}
+          />
         </div>
       )}
     </>
